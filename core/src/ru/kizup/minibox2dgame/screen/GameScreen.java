@@ -3,7 +3,9 @@ package ru.kizup.minibox2dgame.screen;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.ScreenAdapter;
 import com.badlogic.gdx.graphics.GL20;
+import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.Body;
@@ -16,27 +18,27 @@ import ru.kizup.minibox2dgame.model.Assets;
 
 public class GameScreen extends ScreenAdapter {
 
-    private MiniGame game;
-    private SpriteBatch batch;
-    Texture img;
-    Body body;
-    World world;
+    private MiniGame miniGame;
+    private SpriteBatch sb;
+    public Texture img;
+    public Body body;
+    public World world;
 
 
     public GameScreen(MiniGame miniGame) {
-        this.game = miniGame;
-        this.batch = game.getBatch();
+        this.miniGame = miniGame;
+        this.sb = miniGame.getSpriteBatch();
         this.img = Assets.sTexture;
 
-        world = new World(new Vector2(0, -10), true);
+        world = new World(new Vector2(0, 0), true);
 
-        BodyDef bodyDef = new BodyDef();
-        bodyDef.type = BodyDef.BodyType.DynamicBody;
-        bodyDef.bullet = false;
-        bodyDef.position.x = 10;
-        bodyDef.position.y = 10;
+        BodyDef adsBody = new BodyDef();
+        adsBody.type = BodyDef.BodyType.DynamicBody;
+        adsBody.bullet = false;
+        adsBody.position.x = 150;
+        adsBody.position.y = 50;
 
-        body = world.createBody(bodyDef);
+        body = world.createBody(adsBody);
 
         MassData massData = new MassData();
         massData.mass = 10;
@@ -50,9 +52,10 @@ public class GameScreen extends ScreenAdapter {
         super.render(delta);
         Gdx.gl.glClearColor(1, 1, 1, 1);
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
-        batch.begin();
-        batch.draw(img, body.getPosition().x, body.getPosition().y);
-        batch.end();
+        sb.setProjectionMatrix(miniGame.getCamera().combined);
+        sb.begin();
+        sb.draw(img, body.getPosition().x, body.getPosition().y);
+        sb.end();
 
         world.step(delta, 4, 4);
     }
