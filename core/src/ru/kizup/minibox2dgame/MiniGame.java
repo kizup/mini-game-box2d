@@ -300,7 +300,7 @@ public class MiniGame extends ApplicationAdapter implements InputProcessor {
         }
 
         Vector2 getLocalVelocity() {
-            return carBody.getLocalVector(carBody.getLinearVelocityFromLocalPoint(new Vector2(0, 0)));
+            return carBody.getLocalVector(carBody.getLinearVelocityFromLocalPoint(new Vector2(x, y)));
         }
 
         Wheel[] getRevolvingWheels() {
@@ -348,7 +348,7 @@ public class MiniGame extends ApplicationAdapter implements InputProcessor {
                 wheelAngle = Math.min(Math.max(wheelAngle, 0) + incr, maxSteerAngle);
             } else if (steer == STEER_LEFT) {
                 // decrement angle without going over max steer
-                wheelAngle = Math.max(Math.min(wheelAngle, 0) - incr, -wheelAngle);
+                wheelAngle = Math.max(Math.min(wheelAngle, 0) - incr, -maxSteerAngle);
             } else {
                 wheelAngle = 0;
             }
@@ -365,7 +365,7 @@ public class MiniGame extends ApplicationAdapter implements InputProcessor {
 
             // Если ускоритель нажат, а ограничение скорости не достигнуто, перейдите вперед
             if (accelerate == ACC_ACCELERATE && getSpeedKmH() < maxSpeed) {
-                baseVector = new Vector2(0, -1);
+                baseVector = new Vector2(0, 1);
             } else if (accelerate == ACC_BRAKE) {
                 // торможение, но все же движение вперед - увеличенная сила
                 if (getLocalVelocity().x < 0) baseVector = new Vector2(0, 1.3f);
@@ -464,7 +464,10 @@ public class MiniGame extends ApplicationAdapter implements InputProcessor {
         }
 
         private void setAngle(float angle) {
-            wheelBody.setTransform(x, y, (float) (car.carBody.getAngle() + Math.toRadians(angle)));
+            System.out.println("Angle " + Math.toRadians(angle));
+//            wheelBody.setTransform(x, y, (float) (car.carBody.getAngle() + Math.toRadians(angle)));
+//            wheelBody.getLinearVelocity().setAngle((float) (car.carBody.getAngle() + Math.toDegrees(angle)));
+            wheelBody.getTransform().setRotation((float) (car.carBody.getAngle() + Math.toRadians(angle)));
         }
 
         /**
