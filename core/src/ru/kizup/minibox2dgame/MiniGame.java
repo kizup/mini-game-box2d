@@ -6,7 +6,6 @@ import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 
 import ru.kizup.minibox2dgame.handlers.GameStateManager;
-import ru.kizup.minibox2dgame.model.Assets;
 
 public class MiniGame implements ApplicationListener {
 
@@ -56,6 +55,7 @@ public class MiniGame implements ApplicationListener {
         accum += Gdx.graphics.getDeltaTime();
         while (accum >= STEP) {
             accum -= STEP;
+            gameStateManager.update(STEP);
             gameStateManager.render();
         }
     }
@@ -77,8 +77,6 @@ public class MiniGame implements ApplicationListener {
 
     @Override
     public void dispose() {
-//        batch.dispose();
-        Assets.dispose();
     }
 
 }
