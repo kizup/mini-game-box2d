@@ -1,46 +1,38 @@
 package ru.kizup.minibox2dgame;
 
-import com.badlogic.gdx.*;
+import com.badlogic.gdx.ApplicationAdapter;
+import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.Input;
+import com.badlogic.gdx.InputProcessor;
 import com.badlogic.gdx.graphics.GL20;
-import com.badlogic.gdx.graphics.OrthographicCamera;
-import com.badlogic.gdx.graphics.Texture;
-import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
-
-import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Matrix4;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.*;
 import com.badlogic.gdx.physics.box2d.joints.PrismaticJointDef;
 import com.badlogic.gdx.physics.box2d.joints.RevoluteJointDef;
+import com.badlogic.gdx.utils.Array;
 
-public class MiniGame extends ApplicationAdapter  {
-    SpriteBatch batch;
-    Sprite sprite,sprite2;
-    Texture img;
-    World world;
-//    Body body,body2;
-//    Body bodyBottomEdgeScreen;
-//    Body bodyLeftEdgeScreen;
-//    Body bodyRightEdgeScreen;
-
-    Matrix4 debugMatrix;
-    Box2DDebugRenderer debugRenderer;
-    OrthographicCamera camera;
-
-    Car car;
-
+public class MiniGame extends ApplicationAdapter implements InputProcessor {
     final float PIXELS_TO_METERS = 15f;
-    final int STEER_NONE = 0;
-    final int STEER_RIGHT = 1;
-    final int STEER_LEFT = 2;
 
-    final int ACC_NONE = 0;
-    final int ACC_ACCELERATE = 1;
-    final int ACC_BRAKE = 2;
+    private final int STEER_NONE = 0;
+    private final int STEER_RIGHT = 1;
+    private final int STEER_LEFT = 2;
 
-    float WIDTH_IN_METERS;
-    float HEIGHT_IN_METERS;
+    private final int ACC_NONE = 0;
+    private final int ACC_ACCELERATE = 1;
+    private final int ACC_BRAKE = 2;
+
+    private SpriteBatch batch;
+    private World world;
+    private Matrix4 debugMatrix;
+    private Box2DDebugRenderer debugRenderer;
+    //    OrthographicCamera camera;
+    private Car car;
+    private float WIDTH_IN_METERS;
+    private float HEIGHT_IN_METERS;
+    private Array<BoxProp> boxProps;
 
     @Override
     public void create() {
@@ -48,15 +40,28 @@ public class MiniGame extends ApplicationAdapter  {
         HEIGHT_IN_METERS = Gdx.graphics.getHeight() / PIXELS_TO_METERS;
 
         batch = new SpriteBatch();
-        img = new Texture("badlogic.jpg");
+//        img = new Texture("badlogic.jpg");
         debugRenderer = new Box2DDebugRenderer();
-        world = new World(new Vector2(0, 0), true);
+        world = new World(new Vector2(0, 0), false);
 
 //        initBoxProps(Gdx.graphics.getWidth() / PIXELS_TO_METERS,
 //                Gdx.graphics.getHeight() / PIXELS_TO_METERS,
 //                Gdx.graphics.getWidth() / 2, 0.5f);
 
         initCar();
+        boxProps = new Array<BoxProp>();
+        // outer walls
+        boxProps.add(new BoxProp(WIDTH_IN_METERS, 1, WIDTH_IN_METERS / 2, 0.5f));
+        boxProps.add(new BoxProp(WIDTH_IN_METERS, 1, WIDTH_IN_METERS / 2, HEIGHT_IN_METERS - 0.5f));
+        boxProps.add(new BoxProp(1, HEIGHT_IN_METERS, 0.5f, HEIGHT_IN_METERS / 2));
+        boxProps.add(new BoxProp(1, HEIGHT_IN_METERS, WIDTH_IN_METERS - 0.5f, HEIGHT_IN_METERS / 2));
+
+        Vector2 center = new Vector2(WIDTH_IN_METERS / 2, HEIGHT_IN_METERS / 2);
+        boxProps.add(new BoxProp(1, 6, center.x - 3, center.y));
+        boxProps.add(new BoxProp(1, 6, center.x + 3, center.y));
+        boxProps.add(new BoxProp(5, 1, center.x, center.y + 2.5f));
+
+//        Gdx.input.setInputProcessor(this);
     }
 
 //    private void initBoxProps(float w, float h, float x, float y) {
@@ -84,8 +89,35 @@ public class MiniGame extends ApplicationAdapter  {
     @Override
     public void render() {
 //        camera.update();
-        // Step the physics simulation forward at a rate of 60hz
-        world.step(1f/60f, 6, 2);
+
+        float delta = Gdx.graphics.getDeltaTime();
+
+        if (Gdx.input.isKeyPressed(Input.Keys.UP)) {
+            car.accelerate = ACC_ACCELERATE;
+        } else if (Gdx.input.isKeyPressed(Input.Keys.DOWN)) {
+            car.accelerate = ACC_BRAKE;
+        } else {
+            car.accelerate = ACC_NONE;
+        }
+
+        if (Gdx.input.isKeyPressed(Input.Keys.LEFT)) {
+            car.steer = STEER_LEFT;
+        } else if (Gdx.input.isKeyPressed(Input.Keys.RIGHT)) {
+            car.steer = STEER_RIGHT;
+        } else {
+            car.steer = STEER_NONE;
+        }
+
+        if (Gdx.input.isKeyJustPressed(Input.Keys.SPACE)) {
+            car.accelerate = ACC_NONE;
+            car.steer = STEER_NONE;
+        }
+
+        car.update(delta);
+//        world.step(delta, 6, 2);
+        //update physics world
+        world.step(delta / 1000, 6, 2);
+        world.clearForces();
 
         Gdx.gl.glClearColor(1, 1, 1, 1);
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
@@ -100,8 +132,66 @@ public class MiniGame extends ApplicationAdapter  {
 
     @Override
     public void dispose() {
-        img.dispose();
+//        img.dispose();
         world.dispose();
+    }
+
+    @Override
+    public boolean keyDown(int keycode) {
+        if (keycode == Input.Keys.UP) {
+            car.accelerate = ACC_ACCELERATE;
+        } else if (keycode == Input.Keys.DOWN) {
+            car.accelerate = ACC_BRAKE;
+        } else {
+            car.accelerate = ACC_ACCELERATE;
+        }
+
+        if (keycode == Input.Keys.LEFT) {
+            car.steer = STEER_LEFT;
+        } else if (keycode == Input.Keys.RIGHT) {
+            car.steer = STEER_RIGHT;
+        } else {
+            car.steer = STEER_NONE;
+        }
+
+        return true;
+    }
+
+    @Override
+    public boolean keyUp(int keycode) {
+        car.accelerate = ACC_NONE;
+        car.steer = STEER_NONE;
+        return true;
+    }
+
+    @Override
+    public boolean keyTyped(char character) {
+        return false;
+    }
+
+    @Override
+    public boolean touchDown(int screenX, int screenY, int pointer, int button) {
+        return false;
+    }
+
+    @Override
+    public boolean touchUp(int screenX, int screenY, int pointer, int button) {
+        return false;
+    }
+
+    @Override
+    public boolean touchDragged(int screenX, int screenY, int pointer) {
+        return false;
+    }
+
+    @Override
+    public boolean mouseMoved(int screenX, int screenY) {
+        return false;
+    }
+
+    @Override
+    public boolean scrolled(int amount) {
+        return false;
     }
 
     private class Car {
@@ -188,10 +278,120 @@ public class MiniGame extends ApplicationAdapter  {
 
         void initWheels() {
             wheels[0] = new Wheel(-1, -1.2f, 0.4f, 0.8f, true, true, this);
-            wheels[1] = new Wheel(1, -1.2f, 0.4f, 0.8f, true, true, this);
             wheels[2] = new Wheel(-1, 1.2f, 0.4f, 0.8f, false, false, this);
+            wheels[1] = new Wheel(1, -1.2f, 0.4f, 0.8f, true, true, this);
             wheels[3] = new Wheel(1, 1.2f, 0.4f, 0.8f, false, false, this);
         }
+
+        Wheel[] getPoweredWheels() {
+            Array<Wheel> wheelArray = new Array<Wheel>();
+            for (Wheel wheel : this.wheels) {
+                if (wheel.powered) {
+                    wheelArray.add(wheel);
+                }
+            }
+
+            Wheel[] arr = new Wheel[wheelArray.size];
+            for (int i = 0; i < wheelArray.size; i++) {
+                arr[i] = wheelArray.get(i);
+            }
+
+            return arr;
+        }
+
+        Vector2 getLocalVelocity() {
+            return carBody.getLocalVector(carBody.getLinearVelocityFromLocalPoint(new Vector2(0, 0)));
+        }
+
+        Wheel[] getRevolvingWheels() {
+            Array<Wheel> wheelArray = new Array<Wheel>();
+            for (Wheel wheel : this.wheels) {
+                if (wheel.revolving) {
+                    wheelArray.add(wheel);
+                }
+            }
+
+            Wheel[] arr = new Wheel[wheelArray.size];
+            for (int i = 0; i < wheelArray.size; i++) {
+                arr[i] = wheelArray.get(i);
+            }
+
+            return arr;
+        }
+
+        double getSpeedKmH() {
+            Vector2 velocity = carBody.getLinearVelocity();
+            return (velocity.len() / 1000) * 3600;
+        }
+
+        void setSpeed(float speed) {
+            Vector2 velocity = carBody.getLinearVelocity();
+//            velocity = MyMathUtils.unit(velocity);
+            velocity = new Vector2(velocity.x * ((speed * 1000.0f) / 3600.0f),
+                    velocity.y * ((speed * 1000.0f) / 3600.0f));
+            carBody.setLinearVelocity(velocity);
+        }
+
+        void update(float delta) {
+            //1. KILL SIDEWAYS VELOCITY
+            // kill sideways velocity for all wheels
+            for (Wheel wheel : wheels) {
+                wheel.killSidewaysVelocity();
+            }
+
+            //2. SET WHEEL ANGLE
+            // Рассчитать изменение угла колеса для этого обновления, предполагая, что колесо достигнет максимального угла от нуля в 200 мс
+            float incr = (maxSteerAngle / 200) * delta;
+
+            if (steer == STEER_RIGHT) {
+                // угол приращения без превышения максимального положения
+                wheelAngle = Math.min(Math.max(wheelAngle, 0) + incr, maxSteerAngle);
+            } else if (steer == STEER_LEFT) {
+                // decrement angle without going over max steer
+                wheelAngle = Math.max(Math.min(wheelAngle, 0) - incr, -wheelAngle);
+            } else {
+                wheelAngle = 0;
+            }
+
+            //update revolving wheels
+            Wheel[] revolvingWheels = getRevolvingWheels();
+            for (Wheel w : revolvingWheels) {
+                w.setAngle(wheelAngle);
+            }
+
+            //3. APPLY FORCE TO WHEELS
+            // Вектор, указывающий в направлении силы, будет применен к колесу; Относительно колеса.
+            Vector2 baseVector;
+
+            // Если ускоритель нажат, а ограничение скорости не достигнуто, перейдите вперед
+            if (accelerate == ACC_ACCELERATE && getSpeedKmH() < maxSpeed) {
+                baseVector = new Vector2(0, -1);
+            } else if (accelerate == ACC_BRAKE) {
+                // торможение, но все же движение вперед - увеличенная сила
+                if (getLocalVelocity().x < 0) baseVector = new Vector2(0, 1.3f);
+                    // Движение в обратном направлении - меньшая сила
+                else baseVector = new Vector2(0, 0.7f);
+            } else {
+                baseVector = new Vector2(0, 0);
+            }
+
+            // Умножить на мощность двигателя, что дает нам вектор силы относительно колеса
+            Vector2 forceVector = new Vector2(power * baseVector.x, power * baseVector.y);
+
+            //apply force to each wheel
+            for (Wheel w : getPoweredWheels()) {
+                Vector2 position = w.wheelBody.getWorldCenter();
+                w.wheelBody.applyForce(w.wheelBody.getWorldVector(forceVector), position, true);
+            }
+
+            // если идти очень медленно, остановитесь - чтобы предотвратить бесконечное скользящее
+            if (getSpeedKmH() < 4 && accelerate == ACC_NONE) {
+                setSpeed(0);
+            } else {
+                System.out.println("SPEED " + Math.ceil(getSpeedKmH()) + " KmH");
+            }
+        }
+
     }
 
     private class Wheel {
@@ -261,6 +461,79 @@ public class MiniGame extends ApplicationAdapter  {
                 jointDef.lowerTranslation = jointDef.upperTranslation = 0;
                 world.createJoint(jointDef);
             }
+        }
+
+        private void setAngle(float angle) {
+            wheelBody.setTransform(x, y, (float) (car.carBody.getAngle() + Math.toRadians(angle)));
+        }
+
+        /**
+         * @return вектор скорости относительно автомобиля
+         */
+        Vector2 getLocalVelocity() {
+            return car.carBody.getLocalVector(car.carBody.getLinearVelocityFromLocalPoint(new Vector2(x, y)));
+        }
+
+        /**
+         * @return мировой единичный вектор, указывающий направление движения этого колеса
+         */
+        Vector2 getDirectionVector() {
+            return getLocalVelocity().rotate(wheelBody.getAngle());
+//            return MyMathUtils.rotate((getLocalVelocity().y > 0) ? new Vector2(0, 1) : new Vector2(0, -1),
+//                    wheelBody.getAngle());
+        }
+
+        /**
+         * Вытягивает боковую скорость от вектора скорости этого колеса и возвращает оставшийся вектор скорости переднего фронта
+         *
+         * @return
+         */
+        Vector2 getKillVelocityVector() {
+            Vector2 velocity = wheelBody.getLinearVelocity();
+            Vector2 sidewaysAxis = getDirectionVector();
+//            double dotProd = MyMathUtils.dot(velocity, sidewaysAxis);
+            double dotProd = velocity.dot(sidewaysAxis);
+            float x = (float) (sidewaysAxis.y * dotProd);
+            float y = (float) (sidewaysAxis.y * dotProd);
+            return new Vector2(x, y);
+        }
+
+        /**
+         * Удаляет всю боковую скорость от этой скорости колеса
+         */
+        void killSidewaysVelocity() {
+            wheelBody.setLinearVelocity(getKillVelocityVector());
+        }
+
+    }
+
+    private class BoxProp {
+
+        float width;
+        float length;
+        float x;
+        float y;
+        Body boxBody;
+
+        public BoxProp(float width, float length, float x, float y) {
+            this.width = width;
+            this.length = length;
+            this.x = x;
+            this.y = y;
+
+            BodyDef bodyDef = new BodyDef();
+            bodyDef.position.set(new Vector2(x, y));
+            bodyDef.angle = 0;
+            bodyDef.fixedRotation = true;
+
+            boxBody = world.createBody(bodyDef);
+
+            PolygonShape shape = new PolygonShape();
+            shape.setAsBox(width / 2, length / 2);
+            FixtureDef fixtureDef = new FixtureDef();
+            fixtureDef.shape = shape;
+            fixtureDef.restitution = 0.4f;
+            boxBody.createFixture(fixtureDef);
         }
     }
 
