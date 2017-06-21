@@ -67,7 +67,7 @@ public class MiniGame extends ApplicationAdapter implements InputProcessor {
     }
 
     private void initCar() {
-        car = new Car(2, 4, 10, 10, 0, 60, 20, 60, world);
+        car = new Car(2, 4, 10, 10, 0, 20, 5, 40, world);
     }
 
     @Override

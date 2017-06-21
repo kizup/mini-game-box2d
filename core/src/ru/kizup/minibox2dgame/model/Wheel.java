@@ -54,7 +54,7 @@ class Wheel {
     private void initWheelBody() {
         BodyDef def = new BodyDef();
         def.type = BodyDef.BodyType.DynamicBody;
-        def.position.set(car.getCarBody().getWorldPoint(new Vector2(x, y)));
+        def.position.set(car.getCarBody().getWorldPoint(new Vector2(x, 0)));
         def.angle = car.getCarBody().getAngle();
         wheelBody = world.createBody(def);
 
@@ -80,6 +80,16 @@ class Wheel {
             jointDef.initialize(car.getCarBody(), wheelBody, wheelBody.getWorldCenter(), new Vector2(1f, 0f));
             jointDef.enableLimit = true;
             jointDef.lowerTranslation = jointDef.upperTranslation = 0;
+            world.createJoint(jointDef);
+
+            jointDef = new PrismaticJointDef();
+            Vector2 topJointAnchor = new Vector2(wheelBody.getWorldCenter().x, wheelBody.getWorldCenter().y + length / 2);
+            jointDef.initialize(car.getCarBody(), wheelBody, topJointAnchor, new Vector2(1f, 0f));
+            world.createJoint(jointDef);
+
+            jointDef = new PrismaticJointDef();
+            Vector2 bottomJointAnchor = new Vector2(wheelBody.getWorldCenter().x, wheelBody.getWorldCenter().y - length / 2);
+            jointDef.initialize(car.getCarBody(), wheelBody, bottomJointAnchor, new Vector2(1f, 0f));
             world.createJoint(jointDef);
         }
     }

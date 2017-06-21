@@ -66,7 +66,7 @@ public class Car {
         this.power = power;
         this.maxSteerAngle = maxSteerAngle;
         this.maxSpeed = maxSpeed;
-        this.wheels = new Wheel[4];
+        this.wheels = new Wheel[2];
 
         // state of car control
         this.steer = STEER_NONE;
@@ -107,10 +107,12 @@ public class Car {
     }
 
     private void initWheels() {
-        wheels[0] = new Wheel(-1, -1.2f, 0.4f, 0.8f, true, true, this, world);
-        wheels[2] = new Wheel(-1, 1.2f, 0.4f, 0.8f, false, false, this, world);
-        wheels[1] = new Wheel(1, -1.2f, 0.4f, 0.8f, true, true, this, world);
-        wheels[3] = new Wheel(1, 1.2f, 0.4f, 0.8f, false, false, this, world);
+//        wheels[0] = new Wheel(-1, -1.2f, 0.4f, 0.8f, true, true, this, world);
+//        wheels[2] = new Wheel(-1, 1.2f, 0.4f, 0.8f, false, false, this, world);
+//        wheels[1] = new Wheel(1, -1.2f, 0.4f, 0.8f, true, true, this, world);
+//        wheels[3] = new Wheel(1, 1.2f, 0.4f, 0.8f, false, false, this, world);
+        wheels[0] = new Wheel(1, 1.2f, 0.4f, length, false, true, this, world);
+        wheels[1] = new Wheel(-1, 1.2f, 0.4f, length, false, true, this, world);
     }
 
     private Wheel[] getPoweredWheels() {
@@ -203,25 +205,41 @@ public class Car {
 //        float incr = (maxSteerAngle / 200) * delta;
         float incr = (maxSteerAngle) * delta * 5;
 
-        if (steer == STEER_RIGHT) {
-            // угол приращения без превышения максимального положения
-            wheelAngle = Math.max(Math.min(wheelAngle, 0) - incr, -maxSteerAngle);
-        } else if (steer == STEER_LEFT) {
-            // decrement angle without going over max steer
-            wheelAngle = Math.min(Math.max(wheelAngle, 0) + incr, maxSteerAngle);
-        } else {
-            wheelAngle = 0;
-        }
-
-        //update revolving wheels
-        Wheel[] revolvingWheels = getRevolvingWheels();
-        for (Wheel w : revolvingWheels) {
-            w.setAngle(wheelAngle);
-        }
+//        if (steer == STEER_RIGHT) {
+//            // угол приращения без превышения максимального положения
+//            wheelAngle = Math.min(Math.max(wheelAngle, 0) + incr, maxSteerAngle);
+//        } else if (steer == STEER_LEFT) {
+//            // decrement angle without going over max steer
+//            wheelAngle = Math.max(Math.min(wheelAngle, 0) - incr, -maxSteerAngle);
+//        } else {
+//            wheelAngle = 0;
+//        }
+//
+//        //update revolving wheels
+//        Wheel[] revolvingWheels = getRevolvingWheels();
+//        for (Wheel w : revolvingWheels) {
+//            w.setAngle(wheelAngle);
+//        }
 
         //3. APPLY FORCE TO WHEELS
         // Вектор, указывающий в направлении силы, будет применен к колесу; Относительно колеса.
         Vector2 baseVector;
+        Vector2 leftBaseVector = null;
+        Vector2 rightBaseVector = null;
+
+        switch (steer) {
+            case STEER_LEFT: {
+                leftBaseVector = new Vector2(0, 0);
+                break;
+            }
+            case STEER_RIGHT: {
+                rightBaseVector = new Vector2(0, 0);
+                break;
+            }
+            case STEER_NONE: {
+                break;
+            }
+        }
 
         // Если ускоритель нажат, а ограничение скорости не достигнуто, перейдите вперед
         if (accelerate == ACC_ACCELERATE && getSpeedKmH() < maxSpeed) {
@@ -243,11 +261,31 @@ public class Car {
         // Умножить на мощность двигателя, что дает нам вектор силы относительно колеса
         Vector2 forceVector = new Vector2(power * baseVector.x, power * baseVector.y);
 
-        //apply force to each wheel
-        for (Wheel w : getPoweredWheels()) {
+        if (leftBaseVector != null) {
+            Wheel w = getPoweredWheels()[0];
+            Vector2 position = w.getWheelBody().getWorldCenter();
+            getPoweredWheels()[0].getWheelBody().applyForce(w.getWheelBody().getWorldVector(leftBaseVector), position, true);
+        } else {
+            Wheel w = getPoweredWheels()[0];
             Vector2 position = w.getWheelBody().getWorldCenter();
             w.getWheelBody().applyForce(w.getWheelBody().getWorldVector(forceVector), position, true);
         }
+
+        if (rightBaseVector != null) {
+            Wheel w = getPoweredWheels()[1];
+            Vector2 position = w.getWheelBody().getWorldCenter();
+            w.getWheelBody().applyForce(w.getWheelBody().getWorldVector(rightBaseVector), position, true);
+        } else {
+            Wheel w = getPoweredWheels()[1];
+            Vector2 position = w.getWheelBody().getWorldCenter();
+            w.getWheelBody().applyForce(w.getWheelBody().getWorldVector(forceVector), position, true);
+        }
+
+        //apply force to each wheel
+//        for (Wheel w : getPoweredWheels()) {
+//            Vector2 position = w.getWheelBody().getWorldCenter();
+//            w.getWheelBody().applyForce(w.getWheelBody().getWorldVector(forceVector), position, true);
+//        }
 
         // если идти очень медленно, остановитесь - чтобы предотвратить бесконечное скользящее
 //        if (getSpeedKmH() < 4 && accelerate == ACC_NONE) {
