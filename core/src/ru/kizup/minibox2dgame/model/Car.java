@@ -6,6 +6,7 @@ import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.Body;
 import com.badlogic.gdx.physics.box2d.BodyDef;
 import com.badlogic.gdx.physics.box2d.FixtureDef;
+import com.badlogic.gdx.physics.box2d.MassData;
 import com.badlogic.gdx.physics.box2d.PolygonShape;
 import com.badlogic.gdx.physics.box2d.World;
 import com.badlogic.gdx.utils.Array;
@@ -85,10 +86,10 @@ public class Car {
         def.position.set(new Vector2(x, y));
         def.angle = (float) Math.toRadians(angle);
         // Постепенно уменьшает скорость, заставляет автомобиль медленно уменьшать скорость, если не нажат ни акселератор, ни тормоз
-        def.linearDamping = 0.15f;
+        def.linearDamping = 1.5f;
         // Выделяет больше времени на обнаружение столкновений - автомобиль, путешествующий с высокой скоростью при низких частотах кадров, в противном случае мог бы телепортироваться через препятствия.
-        def.bullet = true;
-        def.angularDamping = 0.3f;
+        def.bullet = false;
+        def.angularDamping = 3.3f;
         carBody = world.createBody(def);
 
         // Car shape
@@ -97,20 +98,18 @@ public class Car {
         // Трение при трении против других форм
         fixtureDef.friction = 0.3f;
         // Количество обратной силы при ударе чего-либо. > 0 заставляет автомобиль отскакивать, это весело!
-        fixtureDef.restitution = 0.4f;
+        fixtureDef.restitution = 0.2f;
 
         PolygonShape shape = new PolygonShape();
         shape.setAsBox(width / 2, length / 2);
 
         fixtureDef.shape = shape;
         carBody.createFixture(fixtureDef);
+
+//        Turret turret = new Turret();
     }
 
     private void initWheels() {
-//        wheels[0] = new Wheel(-1, -1.2f, 0.4f, 0.8f, true, true, this, world);
-//        wheels[2] = new Wheel(-1, 1.2f, 0.4f, 0.8f, false, false, this, world);
-//        wheels[1] = new Wheel(1, -1.2f, 0.4f, 0.8f, true, true, this, world);
-//        wheels[3] = new Wheel(1, 1.2f, 0.4f, 0.8f, false, false, this, world);
         wheels[0] = new Wheel(1, 1.2f, 0.4f, length, false, true, this, world);
         wheels[1] = new Wheel(-1, 1.2f, 0.4f, length, false, true, this, world);
     }
@@ -151,16 +150,12 @@ public class Car {
         return arr;
     }
 
-    private double getSpeedKmH() {
+    public double getSpeedKmH() {
         Vector2 velocity = carBody.getLinearVelocity();
         return (velocity.len() / 1000) * 3600;
     }
 
     private void setSpeed(float speed) {
-//        Vector2 velocity = carBody.getLinearVelocity();
-//        velocity = new Vector2(velocity.x * ((speed * 1000.0f) / 3600.0f),
-//                velocity.y * ((speed * 1000.0f) / 3600.0f));
-//        carBody.setLinearVelocity(velocity);
         Vector2 velocity = carBody.getLinearVelocity();
         velocity = velocity.nor();
         velocity = new Vector2(velocity.x*((speed*1000.0f)/3600.0f),
@@ -243,12 +238,13 @@ public class Car {
 
         // Если ускоритель нажат, а ограничение скорости не достигнуто, перейдите вперед
         if (accelerate == ACC_ACCELERATE && getSpeedKmH() < maxSpeed) {
-            baseVector = new Vector2(0, -1);
+            baseVector = new Vector2(0, -1.5f);
         } else if (accelerate == ACC_BRAKE) {
             // торможение, но все же движение вперед - увеличенная сила
-            if (getLocalVelocity().y < 0) baseVector = new Vector2(0, 1.3f);
+//            if (getLocalVelocity().y < 0) baseVector = new Vector2(0, 1.3f);
+            if (getLocalVelocity().y < 0) baseVector = new Vector2(0, 1f);
                 // Движение в обратном направлении - меньшая сила
-            else baseVector = new Vector2(0, 0.7f);
+            else baseVector = new Vector2(0, 1f);
         } /*else if (accelerate == ACC_NONE) {
             baseVector = new Vector2(0, 0);
             if (getSpeedKmH() < 7) setSpeed(0);
@@ -297,5 +293,37 @@ public class Car {
 
     public Body getCarBody() {
         return carBody;
+    }
+
+    private class Turret {
+
+        private float x;
+        private float y;
+//        private float width;
+//        private float length;
+        private Body turretBody;
+
+        Turret() {
+            x = 0.5f;
+            y = 0;
+
+            BodyDef bodyDef = new BodyDef();
+            bodyDef.type = BodyDef.BodyType.DynamicBody;
+            bodyDef.position.set(carBody.getWorldPoint(new Vector2(0, 0)));
+            bodyDef.angle = carBody.getAngle();
+            turretBody = world.createBody(bodyDef);
+
+            FixtureDef fixtureDef = new FixtureDef();
+            fixtureDef.density = 1;
+            fixtureDef.isSensor = false;
+
+
+            PolygonShape shape = new PolygonShape();
+            shape.setAsBox(width / 2, length / 2);
+
+            fixtureDef.shape = shape;
+            carBody.createFixture(fixtureDef);
+        }
+
     }
 }

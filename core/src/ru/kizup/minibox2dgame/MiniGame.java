@@ -3,7 +3,10 @@ package ru.kizup.minibox2dgame;
 import com.badlogic.gdx.ApplicationAdapter;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.InputProcessor;
+import com.badlogic.gdx.graphics.Color;
+import com.badlogic.gdx.graphics.FPSLogger;
 import com.badlogic.gdx.graphics.GL20;
+import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.Matrix4;
 import com.badlogic.gdx.math.Vector2;
@@ -34,9 +37,12 @@ public class MiniGame extends ApplicationAdapter implements InputProcessor {
     private Box2DDebugRenderer debugRenderer;
     //    OrthographicCamera camera;
     private Car car;
+    private Car carDouble;
     private float WIDTH_IN_METERS;
     private float HEIGHT_IN_METERS;
     private Array<BoxProp> boxProps;
+    private BitmapFont font;
+    private FPSLogger fpsLogger;
 
     @Override
     public void create() {
@@ -64,10 +70,15 @@ public class MiniGame extends ApplicationAdapter implements InputProcessor {
         boxProps.add(new BoxProp(1, 6, center.x + 3, center.y));
         boxProps.add(new BoxProp(5, 1, center.x, center.y + 2.5f));
 
+        font = new BitmapFont();
+        font.setColor(Color.BLACK);
+
+        fpsLogger = new FPSLogger();
     }
 
     private void initCar() {
         car = new Car(2, 4, 10, 10, 0, 20, 5, 40, world);
+        carDouble = new Car(2, 4, 20, 20, 0, 20, 5, 40, world);
     }
 
     @Override
@@ -89,6 +100,8 @@ public class MiniGame extends ApplicationAdapter implements InputProcessor {
         debugMatrix = batch.getProjectionMatrix().cpy().scale(PIXELS_TO_METERS,
                 PIXELS_TO_METERS, 0);
         batch.begin();
+        font.draw(batch, "Speed: " + Math.round(car.getSpeedKmH()), 20, Gdx.graphics.getHeight() - 25);
+        font.draw(batch, "FPS: " + Gdx.graphics.getFramesPerSecond(), 20, Gdx.graphics.getHeight() - 45);
         batch.end();
         debugRenderer.render(world, debugMatrix);
     }
