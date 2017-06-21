@@ -6,17 +6,16 @@ import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.Body;
 import com.badlogic.gdx.physics.box2d.BodyDef;
 import com.badlogic.gdx.physics.box2d.FixtureDef;
-import com.badlogic.gdx.physics.box2d.MassData;
 import com.badlogic.gdx.physics.box2d.PolygonShape;
 import com.badlogic.gdx.physics.box2d.World;
 import com.badlogic.gdx.utils.Array;
 
-import static ru.kizup.minibox2dgame.MiniGame.ACC_ACCELERATE;
-import static ru.kizup.minibox2dgame.MiniGame.ACC_BRAKE;
-import static ru.kizup.minibox2dgame.MiniGame.ACC_NONE;
-import static ru.kizup.minibox2dgame.MiniGame.STEER_LEFT;
-import static ru.kizup.minibox2dgame.MiniGame.STEER_NONE;
-import static ru.kizup.minibox2dgame.MiniGame.STEER_RIGHT;
+import static ru.kizup.minibox2dgame.screen.GameScreen.ACC_ACCELERATE;
+import static ru.kizup.minibox2dgame.screen.GameScreen.ACC_BRAKE;
+import static ru.kizup.minibox2dgame.screen.GameScreen.ACC_NONE;
+import static ru.kizup.minibox2dgame.screen.GameScreen.STEER_LEFT;
+import static ru.kizup.minibox2dgame.screen.GameScreen.STEER_NONE;
+import static ru.kizup.minibox2dgame.screen.GameScreen.STEER_RIGHT;
 
 /**
  * Created by dpuzikov on 21.06.17.
@@ -53,9 +52,11 @@ public class Car {
     private float maxSteerAngle;
     private float maxSpeed;
     private int steer;
+    private int steerTurret;
     private int accelerate;
     private Body carBody;
     private Wheel[] wheels;
+    private TankTurret tankTurret;
     private World world;
 
     public Car(float width, float length, float x, float y, float angle, float power, float maxSteerAngle, float maxSpeed, World world) {
@@ -78,6 +79,7 @@ public class Car {
 
         initCarBody();
         initWheels();
+        initTankTower();
     }
 
     private void initCarBody() {
@@ -112,6 +114,10 @@ public class Car {
     private void initWheels() {
         wheels[0] = new Wheel(1, 1.2f, 0.4f, length, false, true, this, world);
         wheels[1] = new Wheel(-1, 1.2f, 0.4f, length, false, true, this, world);
+    }
+
+    private void initTankTower(){
+        tankTurret = new TankTurret(1, 2f, this, world);
     }
 
     private Wheel[] getPoweredWheels() {
@@ -180,6 +186,14 @@ public class Car {
             steer = STEER_NONE;
         }
 
+        if (Gdx.input.isKeyPressed(Input.Keys.Z)) {
+            steerTurret = STEER_LEFT;
+        } else if (Gdx.input.isKeyPressed(Input.Keys.X)) {
+            steerTurret = STEER_RIGHT;
+        } else {
+            steerTurret = STEER_NONE;
+        }
+
         if (Gdx.input.isKeyJustPressed(Input.Keys.SPACE)) {
             accelerate = ACC_NONE;
             steer = STEER_NONE;
@@ -219,6 +233,7 @@ public class Car {
         //3. APPLY FORCE TO WHEELS
         // Вектор, указывающий в направлении силы, будет применен к колесу; Относительно колеса.
         Vector2 baseVector;
+        Vector2 baseTurretVector = null;
         Vector2 leftBaseVector = null;
         Vector2 rightBaseVector = null;
 
@@ -277,10 +292,23 @@ public class Car {
             w.getWheelBody().applyForce(w.getWheelBody().getWorldVector(forceVector), position, true);
         }
 
+        switch (steerTurret) {
+            case STEER_RIGHT:{
+                tankTurret.getTurretBody().setTransform(tankTurret.getTurretBody().getPosition(), tankTurret.getTurretBody().getAngle() - 0.2f);
+            }
+            case STEER_LEFT: {
+                tankTurret.getTurretBody().setTransform(tankTurret.getTurretBody().getPosition(), tankTurret.getTurretBody().getAngle() + 0.1f);
+                break;
+            }
+            case STEER_NONE: {
+                break;
+            }
+        }
+
         //apply force to each wheel
 //        for (Wheel w : getPoweredWheels()) {
-//            Vector2 position = w.getWheelBody().getWorldCenter();
-//            w.getWheelBody().applyForce(w.getWheelBody().getWorldVector(forceVector), position, true);
+//            Vector2 position = w.getTurretBody().getWorldCenter();
+//            w.getTurretBody().applyForce(w.getTurretBody().getWorldVector(forceVector), position, true);
 //        }
 
         // если идти очень медленно, остановитесь - чтобы предотвратить бесконечное скользящее
@@ -293,37 +321,5 @@ public class Car {
 
     public Body getCarBody() {
         return carBody;
-    }
-
-    private class Turret {
-
-        private float x;
-        private float y;
-//        private float width;
-//        private float length;
-        private Body turretBody;
-
-        Turret() {
-            x = 0.5f;
-            y = 0;
-
-            BodyDef bodyDef = new BodyDef();
-            bodyDef.type = BodyDef.BodyType.DynamicBody;
-            bodyDef.position.set(carBody.getWorldPoint(new Vector2(0, 0)));
-            bodyDef.angle = carBody.getAngle();
-            turretBody = world.createBody(bodyDef);
-
-            FixtureDef fixtureDef = new FixtureDef();
-            fixtureDef.density = 1;
-            fixtureDef.isSensor = false;
-
-
-            PolygonShape shape = new PolygonShape();
-            shape.setAsBox(width / 2, length / 2);
-
-            fixtureDef.shape = shape;
-            carBody.createFixture(fixtureDef);
-        }
-
     }
 }
