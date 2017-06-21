@@ -25,7 +25,7 @@ public class GameScreen extends ScreenAdapter {
 
     public GameScreen(MiniGame miniGame) {
         this.game = miniGame;
-        this.batch = game.getBatch();
+//        this.batch = game.getBatch();
         this.img = Assets.sTexture;
 
         world = new World(new Vector2(0, -10), true);
