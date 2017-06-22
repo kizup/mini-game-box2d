@@ -38,16 +38,16 @@ public class TankTurret {
 
     private float x;
     private float y;
-    private Tank tank;
+    private Vehicle vehicle;
     private Body turret;
     private World world;
     private int steer;
     private float tankPrevRotation;
 
-    TankTurret(float x, float y, Tank tank, World world) {
+    TankTurret(float x, float y, Vehicle vehicle, World world) {
         this.x = x;
         this.y = y;
-        this.tank = tank;
+        this.vehicle = vehicle;
         this.world = world;
         initTurretBody();
     }
@@ -56,10 +56,10 @@ public class TankTurret {
         BodyEditorLoader loader = new BodyEditorLoader(Gdx.files.internal("tankTurret.json"));
         BodyDef def = new BodyDef();
         def.type = BodyDef.BodyType.DynamicBody;
-        def.position.set(tank.getTankBody().getWorldPoint(new Vector2(0, 0)));
-        System.out.println(tank.getTankBody().getAngle());
+        def.position.set(vehicle.getBody().getWorldPoint(new Vector2(0, 0)));
+        System.out.println(vehicle.getBody().getAngle());
         //Pi / 2
-        def.angle = (float) (tank.getTankBody().getAngle() + Math.toRadians(-90));
+        def.angle = (float) (vehicle.getBody().getAngle() + Math.toRadians(-90));
         turret = world.createBody(def);
 
         // init shape
@@ -71,25 +71,29 @@ public class TankTurret {
 
         //create joint to connect tankTower to body
         RevoluteJointDef jointdef=new RevoluteJointDef();
-        jointdef.initialize(tank.getTankBody(), turret, turret.getWorldCenter());
+        jointdef.initialize(vehicle.getBody(), turret, turret.getWorldCenter());
         jointdef.enableMotor=false;
         world.createJoint(jointdef);
     }
 
     void setAngle(float angle) {
-        turret.setTransform(turret.getPosition(), (float) (tank.getTankBody().getAngle() + Math.toRadians(angle)));
+        turret.setTransform(turret.getPosition(), (float) (vehicle.getBody().getAngle() + Math.toRadians(angle)));
     }
 
     public void update() {
-        if (Gdx.input.isKeyPressed(Input.Keys.Z)) {
-            steer = STEER_LEFT;
-        } else if (Gdx.input.isKeyPressed(Input.Keys.X)) {
-            steer = STEER_RIGHT;
+        if (vehicle.isEnemy()) {
+
         } else {
-            steer = STEER_NONE;
+            if (Gdx.input.isKeyPressed(Input.Keys.Z)) {
+                steer = STEER_LEFT;
+            } else if (Gdx.input.isKeyPressed(Input.Keys.X)) {
+                steer = STEER_RIGHT;
+            } else {
+                steer = STEER_NONE;
+            }
         }
 
-        float tankRotation = tank.getTankBody().getAngle() - tankPrevRotation;
+        float tankRotation = vehicle.getBody().getAngle() - tankPrevRotation;
 
         switch (steer) {
             case STEER_RIGHT:{
@@ -106,14 +110,14 @@ public class TankTurret {
             }
         }
 
-        tankPrevRotation = tank.getTankBody().getAngle();
+        tankPrevRotation = vehicle.getBody().getAngle();
     }
 
     /**
      * @return вектор скорости относительно автомобиля
      */
     private Vector2 getLocalVelocity() {
-        return tank.getTankBody().getLocalVector(tank.getTankBody().getLinearVelocityFromLocalPoint(new Vector2(x, y)));
+        return vehicle.getBody().getLocalVector(vehicle.getBody().getLinearVelocityFromLocalPoint(new Vector2(x, y)));
     }
 
     /**

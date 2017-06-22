@@ -2,18 +2,13 @@ package ru.kizup.minibox2dgame.model;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
-import com.badlogic.gdx.graphics.g2d.ParticleEffect;
 import com.badlogic.gdx.math.Vector2;
-import com.badlogic.gdx.math.collision.Ray;
 import com.badlogic.gdx.physics.box2d.Body;
 import com.badlogic.gdx.physics.box2d.BodyDef;
 import com.badlogic.gdx.physics.box2d.FixtureDef;
 import com.badlogic.gdx.physics.box2d.PolygonShape;
 import com.badlogic.gdx.physics.box2d.World;
 import com.badlogic.gdx.utils.Array;
-
-import ru.kizup.minibox2dgame.MiniGame;
-import ru.kizup.minibox2dgame.screen.GameScreen;
 
 import static ru.kizup.minibox2dgame.screen.GameScreen.ACC_ACCELERATE;
 import static ru.kizup.minibox2dgame.screen.GameScreen.ACC_BRAKE;
@@ -26,7 +21,7 @@ import static ru.kizup.minibox2dgame.screen.GameScreen.STEER_RIGHT;
  * Created by dpuzikov on 21.06.17.
  */
 
-public class Tank implements Vehicle {
+public class EnemyTank implements Vehicle {
 
         /*
             pars is an object with possible attributes:
@@ -63,9 +58,9 @@ public class Tank implements Vehicle {
     private Wheel[] wheels;
     private TankTurret tankTurret;
     private World world;
-    private ParticleEffect particleEffect;
+    private Tank playerTank;
 
-    public Tank(float width, float length, float x, float y, float angle, float power, float maxSteerAngle, float maxSpeed, World world) {
+    public EnemyTank(float width, float length, float x, float y, float angle, float power, float maxSteerAngle, float maxSpeed, World world, Tank playerTank) {
         this.width = width;
         this.length = length;
         this.x = x;
@@ -75,6 +70,7 @@ public class Tank implements Vehicle {
         this.maxSteerAngle = maxSteerAngle;
         this.maxSpeed = maxSpeed;
         this.wheels = new Wheel[2];
+        this.playerTank = playerTank;
 
         // state of car control
         this.steer = STEER_NONE;
@@ -106,15 +102,13 @@ public class Tank implements Vehicle {
         // Трение при трении против других форм
         fixtureDef.friction = 0.3f;
         // Количество обратной силы при ударе чего-либо. > 0 заставляет автомобиль отскакивать, это весело!
-        fixtureDef.restitution = 0f;
+        fixtureDef.restitution = 0.2f;
 
         PolygonShape shape = new PolygonShape();
         shape.setAsBox(width / 2, length / 2);
 
         fixtureDef.shape = shape;
         tankBody.createFixture(fixtureDef);
-
-//        Turret turret = new Turret();
     }
 
     private void initWheels() {
@@ -200,11 +194,11 @@ public class Tank implements Vehicle {
 
     @Override
     public boolean isEnemy() {
-        return false;
+        return true;
     }
 
     public void update(float delta) {
-        handleInput();
+//        handleInput();
 
         //1. KILL SIDEWAYS VELOCITY
         // kill sideways velocity for all wheels
@@ -273,14 +267,6 @@ public class Tank implements Vehicle {
         if (getSpeedKmH() < 4 && accelerate == ACC_NONE) {
             setSpeed(0);
         }
-    }
-
-    public float getPositionX() {
-        return tankBody.getPosition().x * MiniGame.PIXELS_TO_METERS;
-    }
-
-    public float getPositionY() {
-        return tankBody.getPosition().y * MiniGame.PIXELS_TO_METERS;
     }
 
     @Override

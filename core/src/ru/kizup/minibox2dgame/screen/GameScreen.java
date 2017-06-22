@@ -1,6 +1,7 @@
 package ru.kizup.minibox2dgame.screen;
 
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.Input;
 import com.badlogic.gdx.InputProcessor;
 import com.badlogic.gdx.ScreenAdapter;
 import com.badlogic.gdx.graphics.Color;
@@ -8,7 +9,12 @@ import com.badlogic.gdx.graphics.FPSLogger;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
+import com.badlogic.gdx.graphics.g2d.ParticleEffect;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.maps.tiled.TiledMap;
+import com.badlogic.gdx.maps.tiled.TiledMapRenderer;
+import com.badlogic.gdx.maps.tiled.TmxMapLoader;
+import com.badlogic.gdx.maps.tiled.renderers.OrthogonalTiledMapRenderer;
 import com.badlogic.gdx.math.Matrix4;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.Body;
@@ -26,12 +32,15 @@ import com.badlogic.gdx.utils.Array;
 
 import ru.kizup.minibox2dgame.MiniGame;
 import ru.kizup.minibox2dgame.model.BoxProp;
+import ru.kizup.minibox2dgame.model.Bullet;
+import ru.kizup.minibox2dgame.model.EnemyTank;
 import ru.kizup.minibox2dgame.model.Tank;
 
 import static ru.kizup.minibox2dgame.MiniGame.PIXELS_TO_METERS;
 
 public class GameScreen extends ScreenAdapter {
 
+    private ParticleEffect particleEffect;
     private MiniGame game;
 
     public static final int STEER_NONE = 0;
@@ -48,7 +57,7 @@ public class GameScreen extends ScreenAdapter {
     private Box2DDebugRenderer debugRenderer;
     private OrthographicCamera camera;
     private Tank tank;
-    private Tank tankEnemy;
+    private EnemyTank tankEnemy;
     private float WIDTH_IN_METERS;
     private float HEIGHT_IN_METERS;
     private Array<BoxProp> boxProps;
@@ -57,6 +66,8 @@ public class GameScreen extends ScreenAdapter {
     private Stage stage;
     private Label speedLabel;
     private Label fpsLabel;
+    private TiledMap tiledMap;
+    private TiledMapRenderer mapRenderer;
 
     public GameScreen(MiniGame miniGame) {
         this.game = miniGame;
@@ -109,16 +120,28 @@ public class GameScreen extends ScreenAdapter {
         table.add(speedLabel).left().pad(PIXELS_TO_METERS, PIXELS_TO_METERS, 0, 0);
         table.row().left();
         table.add(fpsLabel).left().pad(0, PIXELS_TO_METERS, 0, 0);
+
+        tiledMap = new TmxMapLoader().load("map/1.tmx");
+        mapRenderer = new OrthogonalTiledMapRenderer(tiledMap);
+
+        particleEffect = new ParticleEffect();
+        particleEffect.load(Gdx.files.internal("particles/fire.p"), Gdx.files.internal("particles/"));
+        particleEffect.getEmitters().first().getAngle().setRelative(true);
     }
 
     private void initTanks() {
         tank = new Tank(2, 4, 10, 10, 0, 40, 5, 40, world);
-        tankEnemy = new Tank(2, 4, 20, 20, 0, 20, 5, 40, world);
+        tankEnemy = new EnemyTank(2, 4, 20, 20, 0, 20, 5, 40, world, tank);
     }
 
     @Override
     public void render(float delta) {
         super.render(delta);
+
+        if (Gdx.input.isKeyJustPressed(Input.Keys.CONTROL_LEFT)) {
+            new Bullet(tank.getPositionX(), tank.getPositionY(), world, null, tank);
+        }
+
 
         updateCamera();
         batch.setProjectionMatrix(camera.combined);
@@ -126,12 +149,23 @@ public class GameScreen extends ScreenAdapter {
         Gdx.gl.glClearColor(1, 1, 1, 1);
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
 
-//        batch.begin();
+        mapRenderer.setView(camera);
+        mapRenderer.render();
+
+//        particleEffect.setPosition(tank.getPositionX(), tank.getPositionY());
+//        particleEffect.getEmitters().first().getAngle().setRelative(false);
+//        particleEffect.getEmitters().first().getAngle().setHigh(tank.getBody().getTransform().getRotation());
+//        particleEffect.getEmitters().first().getAngle().setLow(tank.getBody().getTransform().getRotation());
+//        particleEffect.update(delta);
+
+        batch.begin();
 //        TODO Draw sprites
-//        batch.end();
+//        particleEffect.draw(batch);
+        batch.end();
         updateUI();
 
         tank.update(delta);
+        tankEnemy.update(delta);
         world.step(delta, 6, 2);
         world.clearForces();
 
@@ -140,6 +174,8 @@ public class GameScreen extends ScreenAdapter {
                 .cpy()
                 .scale(PIXELS_TO_METERS, PIXELS_TO_METERS, 0);
         debugRenderer.render(world, debugMatrix);
+
+        if (particleEffect.isComplete()) particleEffect.reset();
     }
 
     private void updateUI() {
@@ -150,8 +186,8 @@ public class GameScreen extends ScreenAdapter {
 
     private void updateCamera() {
         camera.update();
-        Vector2 cameraTarget = new Vector2(tank.getTankBody().getPosition().x * PIXELS_TO_METERS,
-                tank.getTankBody().getPosition().y * PIXELS_TO_METERS);
+        Vector2 cameraTarget = new Vector2(tank.getBody().getPosition().x * PIXELS_TO_METERS,
+                tank.getBody().getPosition().y * PIXELS_TO_METERS);
 
         if (cameraTarget.y - (camera.viewportHeight / 2) <= 0) {
             cameraTarget.set(cameraTarget.x, camera.viewportHeight / 2);
