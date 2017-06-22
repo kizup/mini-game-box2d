@@ -49,7 +49,7 @@ public class TankTurret {
 
     private void initTurretBody() {
         BodyEditorLoader loader = new BodyEditorLoader(Gdx.files.internal("tankTurret.json"));
-
+        System.out.println("init body");
         BodyDef def = new BodyDef();
         def.type = BodyDef.BodyType.DynamicBody;
         def.position.set(car.getCarBody().getWorldPoint(new Vector2(0, 0)));
