@@ -58,6 +58,7 @@ public class Car {
     private Wheel[] wheels;
     private TankTurret tankTurret;
     private World world;
+    private float tankPrevRotation;
 
     public Car(float width, float length, float x, float y, float angle, float power, float maxSteerAngle, float maxSpeed, World world) {
         this.width = width;
@@ -292,18 +293,24 @@ public class Car {
             w.getWheelBody().applyForce(w.getWheelBody().getWorldVector(forceVector), position, true);
         }
 
+        float tankRotation = getCarBody().getAngle() - tankPrevRotation;
+
         switch (steerTurret) {
             case STEER_RIGHT:{
-                tankTurret.getTurretBody().setTransform(tankTurret.getTurretBody().getPosition(), tankTurret.getTurretBody().getAngle() - 0.2f);
+                tankTurret.getTurretBody().setTransform(tankTurret.getTurretBody().getPosition(), tankTurret.getTurretBody().getAngle() - 0.1f);
+                break;
             }
             case STEER_LEFT: {
                 tankTurret.getTurretBody().setTransform(tankTurret.getTurretBody().getPosition(), tankTurret.getTurretBody().getAngle() + 0.1f);
                 break;
             }
             case STEER_NONE: {
+                tankTurret.getTurretBody().setTransform(tankTurret.getTurretBody().getPosition(), tankTurret.getTurretBody().getAngle() + tankRotation);
                 break;
             }
         }
+
+        tankPrevRotation = getCarBody().getAngle();
 
         //apply force to each wheel
 //        for (Wheel w : getPoweredWheels()) {
