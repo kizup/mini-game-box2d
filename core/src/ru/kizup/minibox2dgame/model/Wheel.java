@@ -20,9 +20,9 @@ class Wheel {
 
         pars:
 
-        car - car this wheel belongs to
-        x - horizontal position in meters relative to car's center
-        y - vertical position in meters relative to car's center
+        tank - tank this wheel belongs to
+        x - horizontal position in meters relative to tank's center
+        y - vertical position in meters relative to tank's center
         width - width in meters
         length - length in meters
         revolving - does this wheel revolve when steering?
@@ -35,18 +35,18 @@ class Wheel {
     private float length;
     private boolean revolving;  // вращающееся, поворотное
     private boolean powered;    // ведущее
-    private Car car;
+    private Tank tank;
     private Body wheelBody;
     private World world;
 
-    Wheel(float x, float y, float width, float length, boolean revolving, boolean powered, Car car, World world) {
+    Wheel(float x, float y, float width, float length, boolean revolving, boolean powered, Tank tank, World world) {
         this.x = x;
         this.y = y;
         this.width = width;
         this.length = length;
         this.revolving = revolving;
         this.powered = powered;
-        this.car = car;
+        this.tank = tank;
         this.world = world;
         initWheelBody();
     }
@@ -54,8 +54,8 @@ class Wheel {
     private void initWheelBody() {
         BodyDef def = new BodyDef();
         def.type = BodyDef.BodyType.DynamicBody;
-        def.position.set(car.getCarBody().getWorldPoint(new Vector2(x, 0)));
-        def.angle = car.getCarBody().getAngle();
+        def.position.set(tank.getTankBody().getWorldPoint(new Vector2(x, 0)));
+        def.angle = tank.getTankBody().getAngle();
         wheelBody = world.createBody(def);
 
         // init shape
@@ -72,37 +72,37 @@ class Wheel {
         //create joint to connect wheel to body
         if (revolving) {
             RevoluteJointDef jointDef = new RevoluteJointDef();
-            jointDef.initialize(car.getCarBody(), wheelBody, wheelBody.getWorldCenter());
+            jointDef.initialize(tank.getTankBody(), wheelBody, wheelBody.getWorldCenter());
             jointDef.enableMotor = false;
             world.createJoint(jointDef);
         } else {
             PrismaticJointDef jointDef = new PrismaticJointDef();
-            jointDef.initialize(car.getCarBody(), wheelBody, wheelBody.getWorldCenter(), new Vector2(1f, 0f));
+            jointDef.initialize(tank.getTankBody(), wheelBody, wheelBody.getWorldCenter(), new Vector2(1f, 0f));
             jointDef.enableLimit = true;
             jointDef.lowerTranslation = jointDef.upperTranslation = 0;
             world.createJoint(jointDef);
 
             jointDef = new PrismaticJointDef();
             Vector2 topJointAnchor = new Vector2(wheelBody.getWorldCenter().x, wheelBody.getWorldCenter().y + length / 2);
-            jointDef.initialize(car.getCarBody(), wheelBody, topJointAnchor, new Vector2(1f, 0f));
+            jointDef.initialize(tank.getTankBody(), wheelBody, topJointAnchor, new Vector2(1f, 0f));
             world.createJoint(jointDef);
 
             jointDef = new PrismaticJointDef();
             Vector2 bottomJointAnchor = new Vector2(wheelBody.getWorldCenter().x, wheelBody.getWorldCenter().y - length / 2);
-            jointDef.initialize(car.getCarBody(), wheelBody, bottomJointAnchor, new Vector2(1f, 0f));
+            jointDef.initialize(tank.getTankBody(), wheelBody, bottomJointAnchor, new Vector2(1f, 0f));
             world.createJoint(jointDef);
         }
     }
 
     void setAngle(float angle) {
-        wheelBody.setTransform(wheelBody.getPosition(), (float) (car.getCarBody().getAngle() + Math.toRadians(angle)));
+        wheelBody.setTransform(wheelBody.getPosition(), (float) (tank.getTankBody().getAngle() + Math.toRadians(angle)));
     }
 
     /**
      * @return вектор скорости относительно автомобиля
      */
     private Vector2 getLocalVelocity() {
-        return car.getCarBody().getLocalVector(car.getCarBody().getLinearVelocityFromLocalPoint(new Vector2(x, y)));
+        return tank.getTankBody().getLocalVector(tank.getTankBody().getLinearVelocityFromLocalPoint(new Vector2(x, y)));
     }
 
     /**

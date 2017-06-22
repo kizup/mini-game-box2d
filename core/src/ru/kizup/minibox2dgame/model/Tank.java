@@ -21,7 +21,7 @@ import static ru.kizup.minibox2dgame.screen.GameScreen.STEER_RIGHT;
  * Created by dpuzikov on 21.06.17.
  */
 
-public class Car {
+public class Tank {
 
         /*
             pars is an object with possible attributes:
@@ -54,13 +54,13 @@ public class Car {
     private int steer;
     private int steerTurret;
     private int accelerate;
-    private Body carBody;
+    private Body tankBody;
     private Wheel[] wheels;
     private TankTurret tankTurret;
     private World world;
     private float tankPrevRotation;
 
-    public Car(float width, float length, float x, float y, float angle, float power, float maxSteerAngle, float maxSpeed, World world) {
+    public Tank(float width, float length, float x, float y, float angle, float power, float maxSteerAngle, float maxSpeed, World world) {
         this.width = width;
         this.length = length;
         this.x = x;
@@ -93,9 +93,9 @@ public class Car {
         // Выделяет больше времени на обнаружение столкновений - автомобиль, путешествующий с высокой скоростью при низких частотах кадров, в противном случае мог бы телепортироваться через препятствия.
         def.bullet = false;
         def.angularDamping = 3.3f;
-        carBody = world.createBody(def);
+        tankBody = world.createBody(def);
 
-        // Car shape
+        // Tank shape
         FixtureDef fixtureDef = new FixtureDef();
         fixtureDef.density = 1.0f;
         // Трение при трении против других форм
@@ -107,7 +107,7 @@ public class Car {
         shape.setAsBox(width / 2, length / 2);
 
         fixtureDef.shape = shape;
-        carBody.createFixture(fixtureDef);
+        tankBody.createFixture(fixtureDef);
 
 //        Turret turret = new Turret();
     }
@@ -138,7 +138,7 @@ public class Car {
     }
 
     private Vector2 getLocalVelocity() {
-        return carBody.getLocalVector(carBody.getLinearVelocityFromLocalPoint(new Vector2(x, y)));
+        return tankBody.getLocalVector(tankBody.getLinearVelocityFromLocalPoint(new Vector2(x, y)));
     }
 
     private Wheel[] getRevolvingWheels() {
@@ -158,16 +158,16 @@ public class Car {
     }
 
     public double getSpeedKmH() {
-        Vector2 velocity = carBody.getLinearVelocity();
+        Vector2 velocity = tankBody.getLinearVelocity();
         return (velocity.len() / 1000) * 3600;
     }
 
     private void setSpeed(float speed) {
-        Vector2 velocity = carBody.getLinearVelocity();
+        Vector2 velocity = tankBody.getLinearVelocity();
         velocity = velocity.nor();
         velocity = new Vector2(velocity.x*((speed*1000.0f)/3600.0f),
                 velocity.y*((speed*1000.0f)/3600.0f));
-        carBody.setLinearVelocity(velocity);
+        tankBody.setLinearVelocity(velocity);
     }
 
     private void handleInput() {
@@ -187,14 +187,6 @@ public class Car {
             steer = STEER_NONE;
         }
 
-        if (Gdx.input.isKeyPressed(Input.Keys.Z)) {
-            steerTurret = STEER_LEFT;
-        } else if (Gdx.input.isKeyPressed(Input.Keys.X)) {
-            steerTurret = STEER_RIGHT;
-        } else {
-            steerTurret = STEER_NONE;
-        }
-
         if (Gdx.input.isKeyJustPressed(Input.Keys.SPACE)) {
             accelerate = ACC_NONE;
             steer = STEER_NONE;
@@ -210,31 +202,9 @@ public class Car {
             wheel.killSidewaysVelocity();
         }
 
-        //2. SET WHEEL ANGLE
-        // Рассчитать изменение угла колеса для этого обновления, предполагая, что колесо достигнет максимального угла от нуля в 200 мс
-//        float incr = (maxSteerAngle / 200) * delta;
-        float incr = (maxSteerAngle) * delta * 5;
-
-//        if (steer == STEER_RIGHT) {
-//            // угол приращения без превышения максимального положения
-//            wheelAngle = Math.min(Math.max(wheelAngle, 0) + incr, maxSteerAngle);
-//        } else if (steer == STEER_LEFT) {
-//            // decrement angle without going over max steer
-//            wheelAngle = Math.max(Math.min(wheelAngle, 0) - incr, -maxSteerAngle);
-//        } else {
-//            wheelAngle = 0;
-//        }
-//
-//        //update revolving wheels
-//        Wheel[] revolvingWheels = getRevolvingWheels();
-//        for (Wheel w : revolvingWheels) {
-//            w.setAngle(wheelAngle);
-//        }
-
         //3. APPLY FORCE TO WHEELS
         // Вектор, указывающий в направлении силы, будет применен к колесу; Относительно колеса.
         Vector2 baseVector;
-        Vector2 baseTurretVector = null;
         Vector2 leftBaseVector = null;
         Vector2 rightBaseVector = null;
 
@@ -257,16 +227,10 @@ public class Car {
             baseVector = new Vector2(0, -1.5f);
         } else if (accelerate == ACC_BRAKE) {
             // торможение, но все же движение вперед - увеличенная сила
-//            if (getLocalVelocity().y < 0) baseVector = new Vector2(0, 1.3f);
-            if (getLocalVelocity().y < 0) baseVector = new Vector2(0, 1f);
+            if (getLocalVelocity().y < 0) baseVector = new Vector2(0, 2.5f);
                 // Движение в обратном направлении - меньшая сила
             else baseVector = new Vector2(0, 1f);
-        } /*else if (accelerate == ACC_NONE) {
-            baseVector = new Vector2(0, 0);
-            if (getSpeedKmH() < 7) setSpeed(0);
-            else if (getLocalVelocity().y < 0) baseVector = new Vector2(0, 0.7f);
-            else if (getLocalVelocity().y > 0) baseVector = new Vector2(0, -0.7f);
-        }*/ else {
+        } else {
             baseVector = new Vector2(0, 0);
         }
 
@@ -293,40 +257,15 @@ public class Car {
             w.getWheelBody().applyForce(w.getWheelBody().getWorldVector(forceVector), position, true);
         }
 
-        float tankRotation = getCarBody().getAngle() - tankPrevRotation;
-
-        switch (steerTurret) {
-            case STEER_RIGHT:{
-                tankTurret.getTurretBody().setTransform(tankTurret.getTurretBody().getPosition(), tankTurret.getTurretBody().getAngle() - 0.1f);
-                break;
-            }
-            case STEER_LEFT: {
-                tankTurret.getTurretBody().setTransform(tankTurret.getTurretBody().getPosition(), tankTurret.getTurretBody().getAngle() + 0.1f);
-                break;
-            }
-            case STEER_NONE: {
-                tankTurret.getTurretBody().setTransform(tankTurret.getTurretBody().getPosition(), tankTurret.getTurretBody().getAngle() + tankRotation);
-                break;
-            }
-        }
-
-        tankPrevRotation = getCarBody().getAngle();
-
-        //apply force to each wheel
-//        for (Wheel w : getPoweredWheels()) {
-//            Vector2 position = w.getTurretBody().getWorldCenter();
-//            w.getTurretBody().applyForce(w.getTurretBody().getWorldVector(forceVector), position, true);
-//        }
+        tankTurret.update();
 
         // если идти очень медленно, остановитесь - чтобы предотвратить бесконечное скользящее
-//        if (getSpeedKmH() < 4 && accelerate == ACC_NONE) {
-//            setSpeed(0);
-//        } else {
-//            System.out.println("SPEED " + Math.ceil(getSpeedKmH()) + " KmH");
-//        }
+        if (getSpeedKmH() < 4 && accelerate == ACC_NONE) {
+            setSpeed(0);
+        }
     }
 
-    public Body getCarBody() {
-        return carBody;
+    public Body getTankBody() {
+        return tankBody;
     }
 }

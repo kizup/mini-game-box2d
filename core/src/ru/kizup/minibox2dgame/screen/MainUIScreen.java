@@ -24,8 +24,8 @@ import ru.kizup.minibox2dgame.MiniGame;
 
 public class MainUIScreen extends ScreenAdapter {
 
-    Stage stage;
-    MiniGame miniGame;
+    private Stage stage;
+    private MiniGame miniGame;
 
     public MainUIScreen(final MiniGame miniGame) {
         this.miniGame = miniGame;
@@ -36,7 +36,7 @@ public class MainUIScreen extends ScreenAdapter {
 
         Table table = new Table();
         stage.addActor(table);
-        table.setSize(260, 195);
+        table.setSize(Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
         table.setFillParent(true);
 
         TextButton button = new TextButton("Start Game", skin);
