@@ -4,7 +4,6 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.graphics.g2d.ParticleEffect;
 import com.badlogic.gdx.math.Vector2;
-import com.badlogic.gdx.math.collision.Ray;
 import com.badlogic.gdx.physics.box2d.Body;
 import com.badlogic.gdx.physics.box2d.BodyDef;
 import com.badlogic.gdx.physics.box2d.FixtureDef;
@@ -13,7 +12,6 @@ import com.badlogic.gdx.physics.box2d.World;
 import com.badlogic.gdx.utils.Array;
 
 import ru.kizup.minibox2dgame.MiniGame;
-import ru.kizup.minibox2dgame.screen.GameScreen;
 
 import static ru.kizup.minibox2dgame.screen.GameScreen.ACC_ACCELERATE;
 import static ru.kizup.minibox2dgame.screen.GameScreen.ACC_BRAKE;
@@ -123,7 +121,7 @@ public class Tank implements Vehicle {
     }
 
     private void initTankTower(){
-        tankTurret = new TankTurret(1, 2f, this, world);
+        tankTurret = new TankTurret(1, 2f, this, world, null);
     }
 
     private Wheel[] getPoweredWheels() {
@@ -281,6 +279,10 @@ public class Tank implements Vehicle {
 
     public float getPositionY() {
         return tankBody.getPosition().y * MiniGame.PIXELS_TO_METERS;
+    }
+
+    public float getMaxSpeed() {
+        return maxSpeed;
     }
 
     @Override

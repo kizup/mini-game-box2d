@@ -2,7 +2,6 @@ package ru.kizup.minibox2dgame.screen;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
-import com.badlogic.gdx.InputProcessor;
 import com.badlogic.gdx.ScreenAdapter;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.FPSLogger;
@@ -11,17 +10,14 @@ import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.ParticleEffect;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.maps.tiled.TiledMap;
 import com.badlogic.gdx.maps.tiled.TiledMapRenderer;
 import com.badlogic.gdx.maps.tiled.TmxMapLoader;
 import com.badlogic.gdx.maps.tiled.renderers.OrthogonalTiledMapRenderer;
 import com.badlogic.gdx.math.Matrix4;
 import com.badlogic.gdx.math.Vector2;
-import com.badlogic.gdx.physics.box2d.Body;
-import com.badlogic.gdx.physics.box2d.BodyDef;
 import com.badlogic.gdx.physics.box2d.Box2DDebugRenderer;
-import com.badlogic.gdx.physics.box2d.FixtureDef;
-import com.badlogic.gdx.physics.box2d.PolygonShape;
 import com.badlogic.gdx.physics.box2d.World;
 import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.scenes.scene2d.ui.Label;
@@ -65,9 +61,11 @@ public class GameScreen extends ScreenAdapter {
     private FPSLogger fpsLogger;
     private Stage stage;
     private Label speedLabel;
+    private Label maxSpeedLabel;
     private Label fpsLabel;
     private TiledMap tiledMap;
     private TiledMapRenderer mapRenderer;
+    private ShapeRenderer shapeRenderer;
 
     public GameScreen(MiniGame miniGame) {
         this.game = miniGame;
@@ -114,10 +112,14 @@ public class GameScreen extends ScreenAdapter {
 
         speedLabel = new Label(null, skin);
         speedLabel.setColor(Color.BLACK);
+        maxSpeedLabel = new Label(null, skin);
+        maxSpeedLabel.setColor(Color.BLACK);
         fpsLabel = new Label(null, skin);
         fpsLabel.setColor(Color.BLACK);
 
         table.add(speedLabel).left().pad(PIXELS_TO_METERS, PIXELS_TO_METERS, 0, 0);
+        table.row().left();
+        table.add(maxSpeedLabel).left().pad(0, PIXELS_TO_METERS, 0, 0);
         table.row().left();
         table.add(fpsLabel).left().pad(0, PIXELS_TO_METERS, 0, 0);
 
@@ -127,10 +129,13 @@ public class GameScreen extends ScreenAdapter {
         particleEffect = new ParticleEffect();
         particleEffect.load(Gdx.files.internal("particles/fire.p"), Gdx.files.internal("particles/"));
         particleEffect.getEmitters().first().getAngle().setRelative(true);
+
+        shapeRenderer = new ShapeRenderer();
+        shapeRenderer.setAutoShapeType(true);
     }
 
     private void initTanks() {
-        tank = new Tank(2, 4, 10, 10, 0, 40, 5, 40, world);
+        tank = new Tank(2, 4, 10, 10, 0, 100, 5, 80, world);
         tankEnemy = new EnemyTank(2, 4, 20, 20, 0, 20, 5, 40, world, tank);
     }
 
@@ -180,8 +185,17 @@ public class GameScreen extends ScreenAdapter {
 
     private void updateUI() {
         speedLabel.setText("Speed: " + Math.round(tank.getSpeedKmH()));
+        maxSpeedLabel.setText("Max Speed: " + Math.round(tank.getMaxSpeed()));
         fpsLabel.setText("FPS: " + Gdx.graphics.getFramesPerSecond());
         stage.draw();
+
+        float partOfMaxSpeed = (float) (tank.getSpeedKmH() / tank.getMaxSpeed());
+        if (partOfMaxSpeed > 1) partOfMaxSpeed = 1;
+
+//        shapeRenderer.begin();
+//        shapeRenderer.set(ShapeRenderer.ShapeType.Line);
+//        shapeRenderer.line(Gdx.graphics.getWidth() / 2, Gdx.graphics.getHeight() / 2, (float) ((Gdx.graphics.getWidth() / 2) - 100 * Math.atan(partOfMaxSpeed)), (float) ((Gdx.graphics.getHeight() / 2) + 100 * Math.cos(partOfMaxSpeed)));
+//        shapeRenderer.end();
     }
 
     private void updateCamera() {
@@ -212,5 +226,7 @@ public class GameScreen extends ScreenAdapter {
     public void dispose() {
 //        img.dispose();
         world.dispose();
+        debugRenderer.dispose();
+        batch.dispose();
     }
 }

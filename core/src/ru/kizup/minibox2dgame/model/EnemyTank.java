@@ -117,7 +117,7 @@ public class EnemyTank implements Vehicle {
     }
 
     private void initTankTower(){
-        tankTurret = new TankTurret(1, 2f, this, world);
+        tankTurret = new TankTurret(1, 2f, this, world, playerTank);
     }
 
     private Wheel[] getPoweredWheels() {

@@ -2,12 +2,15 @@ package ru.kizup.minibox2dgame.model;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
+import com.badlogic.gdx.math.Polygon;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.Body;
 import com.badlogic.gdx.physics.box2d.BodyDef;
 import com.badlogic.gdx.physics.box2d.FixtureDef;
 import com.badlogic.gdx.physics.box2d.World;
 import com.badlogic.gdx.physics.box2d.joints.RevoluteJointDef;
+
+import java.util.List;
 
 import ru.kizup.minibox2dgame.util.BodyEditorLoader;
 
@@ -43,12 +46,14 @@ public class TankTurret {
     private World world;
     private int steer;
     private float tankPrevRotation;
+    private Tank playerTank;
 
-    TankTurret(float x, float y, Vehicle vehicle, World world) {
+    TankTurret(float x, float y, Vehicle vehicle, World world, Tank tank) {
         this.x = x;
         this.y = y;
         this.vehicle = vehicle;
         this.world = world;
+        this.playerTank = tank;
         initTurretBody();
     }
 
@@ -74,6 +79,20 @@ public class TankTurret {
         jointdef.initialize(vehicle.getBody(), turret, turret.getWorldCenter());
         jointdef.enableMotor=false;
         world.createJoint(jointdef);
+
+        List<BodyEditorLoader.PolygonModel> polygons = loader.getInternalModel().rigidBodies.get("TankTurret").polygons;
+        BodyEditorLoader.PolygonModel model = polygons.get(polygons.size() - 1);
+        float[] vertices = new float[model.vertices.size() * 2];
+
+        int j = 0;
+        for (int i = 0; i < model.vertices.size(); i++) {
+            vertices[j++] = model.vertices.get(i).x;
+            vertices[j++] = model.vertices.get(i).y;
+        }
+
+        Polygon polygon = new Polygon(vertices);
+        System.out.println("Polygon origin X " + polygon.getOriginX());
+        System.out.println("Polygon origin Y " + polygon.getOriginY());
     }
 
     void setAngle(float angle) {
@@ -82,7 +101,9 @@ public class TankTurret {
 
     public void update() {
         if (vehicle.isEnemy()) {
-
+            Vector2 playerPoint = playerTank.getBody().getWorldPoint(new Vector2(0, 0));
+            float angleToPlayer = turret.getPosition().angle(playerPoint);
+//            System.out.println("Angle to player " + angleToPlayer);
         } else {
             if (Gdx.input.isKeyPressed(Input.Keys.Z)) {
                 steer = STEER_LEFT;
