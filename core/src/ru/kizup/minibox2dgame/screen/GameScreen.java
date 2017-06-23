@@ -30,6 +30,7 @@ import ru.kizup.minibox2dgame.MiniGame;
 import ru.kizup.minibox2dgame.model.BoxProp;
 import ru.kizup.minibox2dgame.model.Bullet;
 import ru.kizup.minibox2dgame.model.EnemyTank;
+import ru.kizup.minibox2dgame.model.PlayerTank;
 import ru.kizup.minibox2dgame.model.Tank;
 
 import static ru.kizup.minibox2dgame.MiniGame.PIXELS_TO_METERS;
@@ -135,13 +136,14 @@ public class GameScreen extends ScreenAdapter {
     }
 
     private void initTanks() {
-        tank = new Tank(2, 4, 10, 10, 0, 100, 5, 80, world);
-        tankEnemy = new EnemyTank(2, 4, 20, 20, 0, 20, 5, 40, world, tank);
+        tank = new PlayerTank(2, 4, new Vector2(10, 10), 0, 100, 5, 80, world);
+        tankEnemy = new EnemyTank(2, 4, new Vector2(20, 20), 0, 20, 5, 40, world, tank);
     }
 
     @Override
     public void render(float delta) {
         super.render(delta);
+        handleInput();
 
         if (Gdx.input.isKeyJustPressed(Input.Keys.CONTROL_LEFT)) {
             new Bullet(tank.getPositionX(), tank.getPositionY(), world, null, tank);
@@ -181,6 +183,12 @@ public class GameScreen extends ScreenAdapter {
         debugRenderer.render(world, debugMatrix);
 
         if (particleEffect.isComplete()) particleEffect.reset();
+    }
+
+    private void handleInput() {
+        if (Gdx.input.isKeyPressed(Input.Keys.R)) {
+            game.startMainMenu();
+        }
     }
 
     private void updateUI() {

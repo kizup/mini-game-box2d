@@ -1,7 +1,6 @@
 package ru.kizup.minibox2dgame.model;
 
 import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.Input;
 import com.badlogic.gdx.math.Polygon;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.Body;
@@ -14,15 +13,11 @@ import java.util.List;
 
 import ru.kizup.minibox2dgame.util.BodyEditorLoader;
 
-import static ru.kizup.minibox2dgame.screen.GameScreen.STEER_LEFT;
-import static ru.kizup.minibox2dgame.screen.GameScreen.STEER_NONE;
-import static ru.kizup.minibox2dgame.screen.GameScreen.STEER_RIGHT;
-
 /**
  * Created by Neuron on 22.06.2017.
  */
 
-public class TankTurret {
+public abstract class TankTurret {
     /*
         wheel object
 
@@ -37,23 +32,22 @@ public class TankTurret {
         powered - is this wheel powered?
     */
 
+    public final float SPEED_ROTATION = 0.1f;
+
     private final float BOTTLE_WIDTH = 4f;
 
-    private float x;
-    private float y;
-    private Vehicle vehicle;
-    private Body turret;
+    private Vector2 position;
     private World world;
-    private int steer;
-    private float tankPrevRotation;
-    private Tank playerTank;
 
-    TankTurret(float x, float y, Vehicle vehicle, World world, Tank tank) {
-        this.x = x;
-        this.y = y;
+    protected float tankPrevRotation;
+    protected Vehicle vehicle;
+    protected Body turret;
+    protected int steer;
+
+    TankTurret(Vector2 position, Vehicle vehicle, World world) {
+        this.position = position;
         this.vehicle = vehicle;
         this.world = world;
-        this.playerTank = tank;
         initTurretBody();
     }
 
@@ -91,54 +85,21 @@ public class TankTurret {
         }
 
         Polygon polygon = new Polygon(vertices);
-        System.out.println("Polygon origin X " + polygon.getOriginX());
-        System.out.println("Polygon origin Y " + polygon.getOriginY());
+    }
+
+    public void update(){
+        //Empty
     }
 
     void setAngle(float angle) {
         turret.setTransform(turret.getPosition(), (float) (vehicle.getBody().getAngle() + Math.toRadians(angle)));
     }
 
-    public void update() {
-        if (vehicle.isEnemy()) {
-            Vector2 playerPoint = playerTank.getBody().getWorldPoint(new Vector2(0, 0));
-            float angleToPlayer = turret.getPosition().angle(playerPoint);
-//            System.out.println("Angle to player " + angleToPlayer);
-        } else {
-            if (Gdx.input.isKeyPressed(Input.Keys.Z)) {
-                steer = STEER_LEFT;
-            } else if (Gdx.input.isKeyPressed(Input.Keys.X)) {
-                steer = STEER_RIGHT;
-            } else {
-                steer = STEER_NONE;
-            }
-        }
-
-        float tankRotation = vehicle.getBody().getAngle() - tankPrevRotation;
-
-        switch (steer) {
-            case STEER_RIGHT:{
-                turret.setTransform(turret.getPosition(), turret.getAngle() - 0.01f);
-                break;
-            }
-            case STEER_LEFT: {
-                turret.setTransform(turret.getPosition(), turret.getAngle() + 0.01f);
-                break;
-            }
-            case STEER_NONE: {
-                turret.setTransform(turret.getPosition(), turret.getAngle() + tankRotation);
-                break;
-            }
-        }
-
-        tankPrevRotation = vehicle.getBody().getAngle();
-    }
-
     /**
      * @return вектор скорости относительно автомобиля
      */
     private Vector2 getLocalVelocity() {
-        return vehicle.getBody().getLocalVector(vehicle.getBody().getLinearVelocityFromLocalPoint(new Vector2(x, y)));
+        return vehicle.getBody().getLocalVector(vehicle.getBody().getLinearVelocityFromLocalPoint(position));
     }
 
     /**

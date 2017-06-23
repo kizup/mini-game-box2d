@@ -1,7 +1,5 @@
 package ru.kizup.minibox2dgame.model;
 
-import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.Input;
 import com.badlogic.gdx.graphics.g2d.ParticleEffect;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.Body;
@@ -24,7 +22,7 @@ import static ru.kizup.minibox2dgame.screen.GameScreen.STEER_RIGHT;
  * Created by dpuzikov on 21.06.17.
  */
 
-public class Tank implements Vehicle {
+public abstract class Tank implements Vehicle {
 
         /*
             pars is an object with possible attributes:
@@ -45,8 +43,7 @@ public class Tank implements Vehicle {
 
     private float width;
     private float length;
-    private float x;
-    private float y;
+    private Vector2 position;
     private float angle;
     private float power;
     private float speed;
@@ -54,20 +51,25 @@ public class Tank implements Vehicle {
     private float wheelAngle; // Отслеживать текущий угол колеса относительно автомобиля. При рулевом управлении влево / вправо угол будет уменьшаться / увеличиваться постепенно на 200 мс, чтобы предотвратить резкость.
     private float maxSteerAngle;
     private float maxSpeed;
-    private int steer;
     private int steerTurret;
-    private int accelerate;
-    private Body tankBody;
     private Wheel[] wheels;
-    private TankTurret tankTurret;
-    private World world;
     private ParticleEffect particleEffect;
+    private Body tankBody;
 
-    public Tank(float width, float length, float x, float y, float angle, float power, float maxSteerAngle, float maxSpeed, World world) {
+    protected TankTurret tankTurret;
+    protected World world;
+    protected int accelerate;
+    protected int steer;
+
+    @Override
+    public abstract boolean isEnemy();
+
+    public abstract void handleInput();
+
+    public Tank(float width, float length, Vector2 position, float angle, float power, float maxSteerAngle, float maxSpeed, World world) {
         this.width = width;
         this.length = length;
-        this.x = x;
-        this.y = y;
+        this.position = position;
         this.angle = angle;
         this.power = power;
         this.maxSteerAngle = maxSteerAngle;
@@ -89,7 +91,7 @@ public class Tank implements Vehicle {
     private void initCarBody() {
         BodyDef def = new BodyDef();
         def.type = BodyDef.BodyType.DynamicBody;
-        def.position.set(new Vector2(x, y));
+        def.position.set(position);
         def.angle = (float) Math.toRadians(angle);
         // Постепенно уменьшает скорость, заставляет автомобиль медленно уменьшать скорость, если не нажат ни акселератор, ни тормоз
         def.linearDamping = 1.5f;
@@ -120,11 +122,11 @@ public class Tank implements Vehicle {
         wheels[1] = new Wheel(-1, 1.2f, 0.4f, length, false, true, this, world);
     }
 
-    private void initTankTower(){
-        tankTurret = new TankTurret(1, 2f, this, world, null);
+    public void initTankTower(){
+        tankTurret = new PlayerTankTurret(new Vector2(1, 2f), this, world);
     }
 
-    private Wheel[] getPoweredWheels() {
+    protected Wheel[] getPoweredWheels() {
         Array<Wheel> wheelArray = new Array<Wheel>();
         for (Wheel wheel : this.wheels) {
             if (wheel.isPowered()) {
@@ -140,8 +142,8 @@ public class Tank implements Vehicle {
         return arr;
     }
 
-    private Vector2 getLocalVelocity() {
-        return tankBody.getLocalVector(tankBody.getLinearVelocityFromLocalPoint(new Vector2(x, y)));
+    protected Vector2 getLocalVelocity() {
+        return tankBody.getLocalVector(tankBody.getLinearVelocityFromLocalPoint(position));
     }
 
     private Wheel[] getRevolvingWheels() {
@@ -165,40 +167,12 @@ public class Tank implements Vehicle {
         return (velocity.len() / 1000) * 3600;
     }
 
-    private void setSpeed(float speed) {
+    protected void setSpeed(float speed) {
         Vector2 velocity = tankBody.getLinearVelocity();
         velocity = velocity.nor();
         velocity = new Vector2(velocity.x*((speed*1000.0f)/3600.0f),
                 velocity.y*((speed*1000.0f)/3600.0f));
         tankBody.setLinearVelocity(velocity);
-    }
-
-    private void handleInput() {
-        if (Gdx.input.isKeyPressed(Input.Keys.UP)) {
-            accelerate = ACC_ACCELERATE;
-        } else if (Gdx.input.isKeyPressed(Input.Keys.DOWN)) {
-            accelerate = ACC_BRAKE;
-        } else {
-            accelerate = ACC_NONE;
-        }
-
-        if (Gdx.input.isKeyPressed(Input.Keys.LEFT)) {
-            steer = STEER_LEFT;
-        } else if (Gdx.input.isKeyPressed(Input.Keys.RIGHT)) {
-            steer = STEER_RIGHT;
-        } else {
-            steer = STEER_NONE;
-        }
-
-        if (Gdx.input.isKeyJustPressed(Input.Keys.SPACE)) {
-            accelerate = ACC_NONE;
-            steer = STEER_NONE;
-        }
-    }
-
-    @Override
-    public boolean isEnemy() {
-        return false;
     }
 
     public void update(float delta) {

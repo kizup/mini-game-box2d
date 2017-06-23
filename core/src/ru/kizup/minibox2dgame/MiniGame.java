@@ -15,13 +15,15 @@ public class MiniGame  extends Game {
     @Override
     public void create () {
         batch = new SpriteBatch();
-        setScreen(new MainUIScreen(this));
-
-//        setScreen(new GameScreen(this));
+        startMainMenu();
     }
 
     public void startGame(){
         setScreen(new GameScreen(this));
+    }
+
+    public void startMainMenu(){
+        setScreen(new MainUIScreen(this));
     }
 
     @Override
