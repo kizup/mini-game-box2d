@@ -39,6 +39,7 @@ public abstract class TankTurret {
 
     private Vector2 position;
     private World world;
+    private Vector2 margin;
 
     protected float heightTurret;
     protected float widthTurret;
@@ -47,13 +48,12 @@ public abstract class TankTurret {
     protected Vehicle vehicle;
     protected Body turret;
     protected int steer;
-    public float xOr = 0;
-    public float yOr = 0;
 
-    TankTurret(Vector2 position, Vehicle vehicle, World world) {
+    TankTurret(Vector2 position, Vehicle vehicle, World world, Vector2 margin) {
         this.position = position;
         this.vehicle = vehicle;
         this.world = world;
+        this.margin = margin;
         initTurretBody();
     }
 
@@ -62,7 +62,7 @@ public abstract class TankTurret {
         BodyDef def = new BodyDef();
         def.type = BodyDef.BodyType.DynamicBody;
         def.position.set(vehicle.getBody().getWorldPoint(new Vector2(0, 0)));
-        System.out.println(vehicle.getBody().getAngle());
+
         //Pi / 2
         def.angle = (float) (vehicle.getBody().getAngle() + Math.toRadians(-90));
         turret = world.createBody(def);
@@ -72,14 +72,15 @@ public abstract class TankTurret {
         fixtureDef.density = 0;
         // Колесо не участвует в расчетах столкновения: возникающие осложнения не нужны
         fixtureDef.isSensor = true;
+        fixtureDef.friction = 0;
         loader.attachFixture(turret, "TankTurret", fixtureDef, BOTTLE_WIDTH);
-        xOr = loader.getOrigin("TankTurret", BOTTLE_WIDTH).x;
-        yOr = loader.getOrigin("TankTurret", BOTTLE_WIDTH).y;
 
         //create joint to connect tankTower to body
         RevoluteJointDef jointdef=new RevoluteJointDef();
         jointdef.initialize(vehicle.getBody(), turret, turret.getWorldCenter());
         jointdef.enableMotor=false;
+        jointdef.localAnchorA.set(margin);
+
         world.createJoint(jointdef);
         considerSize(loader);
 

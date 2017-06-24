@@ -19,7 +19,7 @@ public class EnemyTank extends Tank {
 
     @Override
     public void initTankTower(){
-        tankTurret = new EnemyTankTurret(new Vector2(1, 2f), this, world);
+        tankTurret = new EnemyTankTurret(new Vector2(1, 2f), this, world, new Vector2(0,0));
     }
 
     @Override

@@ -13,8 +13,8 @@ public class EnemyTankTurret extends TankTurret{
 
     private Vector2 targetVector;
 
-    EnemyTankTurret(Vector2 position, Vehicle vehicle, World world) {
-        super(position, vehicle, world);
+    EnemyTankTurret(Vector2 position, Vehicle vehicle, World world, Vector2 margin) {
+        super(position, vehicle, world, margin);
     }
 
     @Override

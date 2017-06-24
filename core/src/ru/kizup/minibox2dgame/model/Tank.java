@@ -133,7 +133,7 @@ public abstract class Tank implements Vehicle {
     }
 
     public void initTankTower(){
-        tankTurret = new PlayerTankTurret(new Vector2(1, 2f), this, world);
+        tankTurret = new PlayerTankTurret(new Vector2(1, 2f), this, world, new Vector2(0, 1f));
     }
 
     protected Wheel[] getPoweredWheels() {
@@ -262,7 +262,7 @@ public abstract class Tank implements Vehicle {
         }
 
         if (bullet == BULLET_EXIST) {
-            new Bullet(world, tankTurret, tankTurret.vehicle);
+            new Bullet(world, tankTurret);
         }
     }
 

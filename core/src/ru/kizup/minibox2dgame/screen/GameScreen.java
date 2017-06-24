@@ -28,6 +28,7 @@ import com.badlogic.gdx.utils.Array;
 
 import ru.kizup.minibox2dgame.MiniGame;
 import ru.kizup.minibox2dgame.model.BoxProp;
+import ru.kizup.minibox2dgame.model.ContactWorldListener;
 import ru.kizup.minibox2dgame.model.EnemyTank;
 import ru.kizup.minibox2dgame.model.PlayerTank;
 import ru.kizup.minibox2dgame.model.Tank;
@@ -135,6 +136,7 @@ public class GameScreen extends ScreenAdapter {
 
         shapeRenderer = new ShapeRenderer();
         shapeRenderer.setAutoShapeType(true);
+        world.setContactListener(new ContactWorldListener(world));
     }
 
     private void initTanks() {

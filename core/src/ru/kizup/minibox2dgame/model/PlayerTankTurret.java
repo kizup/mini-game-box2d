@@ -17,8 +17,8 @@ import static ru.kizup.minibox2dgame.screen.GameScreen.STEER_RIGHT;
 
 public class PlayerTankTurret extends TankTurret{
 
-    PlayerTankTurret(Vector2 position, Vehicle vehicle, World world) {
-        super(position, vehicle, world);
+    PlayerTankTurret(Vector2 position, Vehicle vehicle, World world, Vector2 margin) {
+        super(position, vehicle, world, margin);
     }
 
     @Override
