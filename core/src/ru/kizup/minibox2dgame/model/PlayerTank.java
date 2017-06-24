@@ -19,7 +19,7 @@ import static ru.kizup.minibox2dgame.screen.GameScreen.STEER_RIGHT;
 public class PlayerTank extends Tank{
 
     public PlayerTank(float width, float length, Vector2 position, float angle, float power, float maxSteerAngle, float maxSpeed, World world) {
-        super(width, length, position, angle, power, maxSteerAngle, maxSpeed, world);
+        super(width, length, position, angle, power, maxSteerAngle, maxSpeed, world, 4);
     }
 
     @Override

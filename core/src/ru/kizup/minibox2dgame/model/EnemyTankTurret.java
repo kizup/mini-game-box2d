@@ -1,6 +1,5 @@
 package ru.kizup.minibox2dgame.model;
 
-import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.World;
 
@@ -28,7 +27,7 @@ public class EnemyTankTurret extends TankTurret{
         tankPrevRotation = vehicle.getBody().getAngle();
     }
 
-    //Находим разницу между углами и находим наименьшее расстояние на замкнутой прямой
+    //Находим разницу между углами и находим наименьшее расстояние на замкнутой прямой (0,360)
     private float getAngleRotationToTarget(){
         float angle = (float) Math.atan2(targetVector.y - turret.getPosition().y, targetVector.x - turret.getPosition().x);
 
@@ -47,7 +46,7 @@ public class EnemyTankTurret extends TankTurret{
         return speedRotation;
     }
 
-    public void setTargetVector(Vector2 targetVector){
+    void setTargetVector(Vector2 targetVector){
         this.targetVector = targetVector;
     }
 }

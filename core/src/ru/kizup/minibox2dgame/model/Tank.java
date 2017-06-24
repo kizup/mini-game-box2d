@@ -39,6 +39,7 @@ public abstract class Tank implements Vehicle {
                      y is wheel position in meters relative to car body center
                      revolving - boolean, does this turn rotate when steering?
                      powered - is force applied to this wheel when accelerating/braking?
+            koefRotation - коэффициент поворота танка от 0 до power. 1 - не изменять скорость поворота.
     */
 
     private float width;
@@ -55,6 +56,7 @@ public abstract class Tank implements Vehicle {
     private Wheel[] wheels;
     private ParticleEffect particleEffect;
     private Body tankBody;
+    private float koefRotation;
 
     protected TankTurret tankTurret;
     protected World world;
@@ -66,7 +68,10 @@ public abstract class Tank implements Vehicle {
 
     public abstract void handleInput();
 
-    public Tank(float width, float length, Vector2 position, float angle, float power, float maxSteerAngle, float maxSpeed, World world) {
+    public Tank(float width, float length, Vector2 position, float angle, float power, float maxSteerAngle, float maxSpeed, World world, int koefRotation) {
+        if(koefRotation == 0 || koefRotation > power)
+            throw new ArithmeticException("Коэффициент поворота танка должен быть в диапазоне [1;power]");
+
         this.width = width;
         this.length = length;
         this.position = position;
@@ -75,6 +80,7 @@ public abstract class Tank implements Vehicle {
         this.maxSteerAngle = maxSteerAngle;
         this.maxSpeed = maxSpeed;
         this.wheels = new Wheel[2];
+        this.koefRotation = koefRotation;
 
         // state of car control
         this.steer = STEER_NONE;
@@ -190,20 +196,6 @@ public abstract class Tank implements Vehicle {
         Vector2 leftBaseVector = null;
         Vector2 rightBaseVector = null;
 
-        switch (steer) {
-            case STEER_LEFT: {
-                leftBaseVector = new Vector2(0, 0);
-                break;
-            }
-            case STEER_RIGHT: {
-                rightBaseVector = new Vector2(0, 0);
-                break;
-            }
-            case STEER_NONE: {
-                break;
-            }
-        }
-
         // Если ускоритель нажат, а ограничение скорости не достигнуто, перейдите вперед
         if (accelerate == ACC_ACCELERATE && getSpeedKmH() < maxSpeed) {
             baseVector = new Vector2(0, -1.5f);
@@ -218,6 +210,25 @@ public abstract class Tank implements Vehicle {
 
         // Умножить на мощность двигателя, что дает нам вектор силы относительно колеса
         Vector2 forceVector = new Vector2(power * baseVector.x, power * baseVector.y);
+        switch (steer) {
+            case STEER_LEFT: {
+                if(accelerate != ACC_ACCELERATE)
+                    leftBaseVector = new Vector2(0,( power * 1.5f )/ (koefRotation / 2));  //Двигаем гусли, если танк на месте на месте
+                else
+                    leftBaseVector = new Vector2( 0, (power - (power / koefRotation))*-1); //Скорость поворота
+                break;
+            }
+            case STEER_RIGHT: {
+                if(accelerate != ACC_ACCELERATE)
+                    rightBaseVector = new Vector2(0, ( power * 1.5f )/ (koefRotation / 2));
+                else
+                    rightBaseVector = new Vector2( 0, (power - (power / koefRotation))*-1 );
+                break;
+            }
+            case STEER_NONE: {
+                break;
+            }
+        }
 
         if (leftBaseVector != null) {
             Wheel w = getPoweredWheels()[0];

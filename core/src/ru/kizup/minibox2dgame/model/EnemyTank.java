@@ -12,7 +12,7 @@ public class EnemyTank extends Tank {
     private Tank targetTank; // Таргет игрока
 
     public EnemyTank(float width, float length, Vector2 position, float angle, float power, float maxSteerAngle, float maxSpeed, World world, Tank targetTank) {
-        super(width, length, position, angle, power, maxSteerAngle, maxSpeed, world);
+        super(width, length, position, angle, power, maxSteerAngle, maxSpeed, world, 4);
         this.targetTank = targetTank;
         setTargetVector(targetTank.getBody().getPosition());
     }
