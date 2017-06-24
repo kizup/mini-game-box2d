@@ -28,7 +28,6 @@ import com.badlogic.gdx.utils.Array;
 
 import ru.kizup.minibox2dgame.MiniGame;
 import ru.kizup.minibox2dgame.model.BoxProp;
-import ru.kizup.minibox2dgame.model.Bullet;
 import ru.kizup.minibox2dgame.model.EnemyTank;
 import ru.kizup.minibox2dgame.model.PlayerTank;
 import ru.kizup.minibox2dgame.model.Tank;
@@ -47,6 +46,9 @@ public class GameScreen extends ScreenAdapter {
     public static final int ACC_NONE = 0;
     public static final int ACC_ACCELERATE = 1;
     public static final int ACC_BRAKE = 2;
+
+    public static final int BULLET_NONE = 0;
+    public static final int BULLET_EXIST = 1;
 
     private SpriteBatch batch;
     private World world;
@@ -144,11 +146,6 @@ public class GameScreen extends ScreenAdapter {
     public void render(float delta) {
         super.render(delta);
         handleInput();
-
-        if (Gdx.input.isKeyJustPressed(Input.Keys.CONTROL_LEFT)) {
-            new Bullet(tank.getPositionX(), tank.getPositionY(), world, null, tank);
-        }
-
 
         updateCamera();
         batch.setProjectionMatrix(camera.combined);

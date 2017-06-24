@@ -9,6 +9,7 @@ import com.badlogic.gdx.physics.box2d.FixtureDef;
 import com.badlogic.gdx.physics.box2d.World;
 import com.badlogic.gdx.physics.box2d.joints.RevoluteJointDef;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import ru.kizup.minibox2dgame.util.BodyEditorLoader;
@@ -39,10 +40,15 @@ public abstract class TankTurret {
     private Vector2 position;
     private World world;
 
+    protected float heightTurret;
+    protected float widthTurret;
+
     protected float tankPrevRotation;
     protected Vehicle vehicle;
     protected Body turret;
     protected int steer;
+    public float xOr = 0;
+    public float yOr = 0;
 
     TankTurret(Vector2 position, Vehicle vehicle, World world) {
         this.position = position;
@@ -67,24 +73,58 @@ public abstract class TankTurret {
         // Колесо не участвует в расчетах столкновения: возникающие осложнения не нужны
         fixtureDef.isSensor = true;
         loader.attachFixture(turret, "TankTurret", fixtureDef, BOTTLE_WIDTH);
+        xOr = loader.getOrigin("TankTurret", BOTTLE_WIDTH).x;
+        yOr = loader.getOrigin("TankTurret", BOTTLE_WIDTH).y;
 
         //create joint to connect tankTower to body
         RevoluteJointDef jointdef=new RevoluteJointDef();
         jointdef.initialize(vehicle.getBody(), turret, turret.getWorldCenter());
         jointdef.enableMotor=false;
         world.createJoint(jointdef);
+        considerSize(loader);
 
+
+//        float[] vertices = new float[model.vertices.size() * 2];
+//
+//        int j = 0;
+//        for (int i = 0; i < model.vertices.size(); i++) {
+//            vertices[j++] = model.vertices.get(i).x;
+//            vertices[j++] = model.vertices.get(i).y;
+//        }
+//
+//        Polygon polygon = new Polygon(vertices);
+    }
+    public void considerSize(BodyEditorLoader loader){
         List<BodyEditorLoader.PolygonModel> polygons = loader.getInternalModel().rigidBodies.get("TankTurret").polygons;
-        BodyEditorLoader.PolygonModel model = polygons.get(polygons.size() - 1);
-        float[] vertices = new float[model.vertices.size() * 2];
+//        BodyEditorLoader.PolygonModel model = polygons.get(polygons.size() - 1);
 
-        int j = 0;
-        for (int i = 0; i < model.vertices.size(); i++) {
-            vertices[j++] = model.vertices.get(i).x;
-            vertices[j++] = model.vertices.get(i).y;
+        ArrayList<Float> points = new ArrayList<Float>();
+        for(BodyEditorLoader.PolygonModel polygon : polygons){
+            for(Vector2 vector2 : polygon.vertices){
+                points.add(vector2.x);
+                points.add(vector2.y);
+            }
         }
 
-        Polygon polygon = new Polygon(vertices);
+        float minX = Float.MAX_VALUE;
+        float maxX = -Float.MAX_VALUE;
+        float minY = Float.MAX_VALUE;
+        float maxY = -Float.MAX_VALUE;
+
+        for(int i = 0; i < points.size() - 1; i += 2) {
+            float x = points.get(i);
+            float y = points.get(i + 1);
+            minX = Math.min(minX, x);
+            maxX = Math.max(maxX, x);
+            minY = Math.min(minY, y);
+            maxY = Math.max(maxY, y);
+        }
+
+        float sizeWidth = maxX - minX;
+        float sizeHeight = maxY - minY;
+        Vector2 v = new Vector2(sizeWidth, sizeHeight).scl(BOTTLE_WIDTH);
+        heightTurret = v.y;
+        widthTurret = v.x;
     }
 
     public void update(){

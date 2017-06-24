@@ -1,5 +1,7 @@
 package ru.kizup.minibox2dgame.model;
 
+import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.Input;
 import com.badlogic.gdx.graphics.g2d.ParticleEffect;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.Body;
@@ -14,6 +16,7 @@ import ru.kizup.minibox2dgame.MiniGame;
 import static ru.kizup.minibox2dgame.screen.GameScreen.ACC_ACCELERATE;
 import static ru.kizup.minibox2dgame.screen.GameScreen.ACC_BRAKE;
 import static ru.kizup.minibox2dgame.screen.GameScreen.ACC_NONE;
+import static ru.kizup.minibox2dgame.screen.GameScreen.BULLET_EXIST;
 import static ru.kizup.minibox2dgame.screen.GameScreen.STEER_LEFT;
 import static ru.kizup.minibox2dgame.screen.GameScreen.STEER_NONE;
 import static ru.kizup.minibox2dgame.screen.GameScreen.STEER_RIGHT;
@@ -62,6 +65,7 @@ public abstract class Tank implements Vehicle {
     protected World world;
     protected int accelerate;
     protected int steer;
+    protected int bullet;
 
     @Override
     public abstract boolean isEnemy();
@@ -255,6 +259,10 @@ public abstract class Tank implements Vehicle {
         // если идти очень медленно, остановитесь - чтобы предотвратить бесконечное скользящее
         if (getSpeedKmH() < 4 && accelerate == ACC_NONE) {
             setSpeed(0);
+        }
+
+        if (bullet == BULLET_EXIST) {
+            new Bullet(world, tankTurret, tankTurret.vehicle);
         }
     }
 
