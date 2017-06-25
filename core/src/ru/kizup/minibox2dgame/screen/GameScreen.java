@@ -27,8 +27,9 @@ import com.badlogic.gdx.utils.Align;
 import com.badlogic.gdx.utils.Array;
 
 import ru.kizup.minibox2dgame.MiniGame;
+import ru.kizup.minibox2dgame.controller.CollisionCategory;
+import ru.kizup.minibox2dgame.controller.ContactWorldListener;
 import ru.kizup.minibox2dgame.model.BoxProp;
-import ru.kizup.minibox2dgame.model.ContactWorldListener;
 import ru.kizup.minibox2dgame.model.EnemyTank;
 import ru.kizup.minibox2dgame.model.PlayerTank;
 import ru.kizup.minibox2dgame.model.Tank;
@@ -85,18 +86,18 @@ public class GameScreen extends ScreenAdapter {
 
         // outer walls
         // Bottom wall
-        boxProps.add(new BoxProp(WIDTH_IN_METERS, 1, WIDTH_IN_METERS / 2, 0.5f, world));
+        boxProps.add(new BoxProp(WIDTH_IN_METERS, 1, WIDTH_IN_METERS / 2, 0.5f, world, CollisionCategory.MASK_BORDER));
         // Top wall
-        boxProps.add(new BoxProp(WIDTH_IN_METERS, 1, WIDTH_IN_METERS / 2, HEIGHT_IN_METERS - 0.5f, world));
+        boxProps.add(new BoxProp(WIDTH_IN_METERS, 1, WIDTH_IN_METERS / 2, HEIGHT_IN_METERS - 0.5f, world, CollisionCategory.MASK_BORDER));
         // Left wall
-        boxProps.add(new BoxProp(1, HEIGHT_IN_METERS, 0.5f, HEIGHT_IN_METERS / 2, world));
+        boxProps.add(new BoxProp(1, HEIGHT_IN_METERS, 0.5f, HEIGHT_IN_METERS / 2, world, CollisionCategory.MASK_BORDER));
         // Right wall
-        boxProps.add(new BoxProp(1, HEIGHT_IN_METERS, WIDTH_IN_METERS - 0.5f, HEIGHT_IN_METERS / 2, world));
+        boxProps.add(new BoxProp(1, HEIGHT_IN_METERS, WIDTH_IN_METERS - 0.5f, HEIGHT_IN_METERS / 2, world, CollisionCategory.MASK_BORDER));
 
         Vector2 center = new Vector2(WIDTH_IN_METERS / 2, HEIGHT_IN_METERS / 2);
-        boxProps.add(new BoxProp(3, 3, center.x - 10, center.y, world));
-        boxProps.add(new BoxProp(6, 6, center.x + 3, center.y, world));
-        boxProps.add(new BoxProp(1, 1, center.x + 2, center.y + 10f, world));
+        boxProps.add(new BoxProp(3, 3, center.x - 10, center.y, world, CollisionCategory.MASK_SCENERY));
+        boxProps.add(new BoxProp(6, 6, center.x + 3, center.y, world, CollisionCategory.MASK_SCENERY));
+        boxProps.add(new BoxProp(1, 1, center.x + 2, center.y + 10f, world, CollisionCategory.MASK_SCENERY));
 
         font = new BitmapFont();
         font.setColor(Color.BLACK);
@@ -136,7 +137,7 @@ public class GameScreen extends ScreenAdapter {
 
         shapeRenderer = new ShapeRenderer();
         shapeRenderer.setAutoShapeType(true);
-        world.setContactListener(new ContactWorldListener(world));
+        world.setContactListener(new ContactWorldListener());
     }
 
     private void initTanks() {

@@ -1,7 +1,5 @@
 package ru.kizup.minibox2dgame.model;
 
-import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.Input;
 import com.badlogic.gdx.graphics.g2d.ParticleEffect;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.Body;
@@ -10,6 +8,9 @@ import com.badlogic.gdx.physics.box2d.FixtureDef;
 import com.badlogic.gdx.physics.box2d.PolygonShape;
 import com.badlogic.gdx.physics.box2d.World;
 import com.badlogic.gdx.utils.Array;
+
+import java.util.ArrayList;
+import java.util.List;
 
 import ru.kizup.minibox2dgame.MiniGame;
 
@@ -60,6 +61,7 @@ public abstract class Tank implements Vehicle {
     private ParticleEffect particleEffect;
     private Body tankBody;
     private float koefRotation;
+    private List<Bullet> bulletList = new ArrayList<Bullet>();
 
     protected TankTurret tankTurret;
     protected World world;
@@ -92,6 +94,7 @@ public abstract class Tank implements Vehicle {
         this.wheelAngle = 0;
 
         this.world = world;
+        this.bulletList = new ArrayList<Bullet>();
 
         initCarBody();
         initWheels();
@@ -117,14 +120,17 @@ public abstract class Tank implements Vehicle {
         fixtureDef.friction = 0.3f;
         // Количество обратной силы при ударе чего-либо. > 0 заставляет автомобиль отскакивать, это весело!
         fixtureDef.restitution = 0f;
+        fixtureDef.filter.maskBits = ru.kizup.minibox2dgame.controller.CollisionCategory.MASK_TANK;
+        fixtureDef.filter.categoryBits = ru.kizup.minibox2dgame.controller.CollisionCategory.CATEGORY_PLAYER;
 
         PolygonShape shape = new PolygonShape();
         shape.setAsBox(width / 2, length / 2);
 
         fixtureDef.shape = shape;
         tankBody.createFixture(fixtureDef);
+        tankBody.setUserData(this);
 
-//        Turret turret = new Turret();
+//        Turret bodyTurret = new Turret();
     }
 
     private void initWheels() {
@@ -262,7 +268,18 @@ public abstract class Tank implements Vehicle {
         }
 
         if (bullet == BULLET_EXIST) {
-            new Bullet(world, tankTurret);
+            bulletList.add(new Bullet(world, tankTurret));
+        }
+
+        if(bulletList.size() > 0){
+            for(int i = 0; i < bulletList.size(); i++){
+                bulletList.get(i).update(delta);
+                if(bulletList.get(i).isDestroy()){
+                    bulletList.get(i).getBody().setActive(false);
+                    world.destroyBody(bulletList.get(i).getBody());
+                    bulletList.remove(i);
+                }
+            }
         }
     }
 

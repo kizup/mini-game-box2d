@@ -20,19 +20,19 @@ public class EnemyTankTurret extends TankTurret{
     @Override
     public void update() {
         super.update();
-//        turret.setTransform(turret.getPosition(), vehicle.getBody().getAngle() - tankPrevRotation);
+//        bodyTurret.setTransform(bodyTurret.getPosition(), vehicle.getBody().getAngle() - tankPrevRotation);
 
-        turret.setTransform(turret.getPosition(), Util.normalizeAngle(turret.getAngle()) + getAngleRotationToTarget());
+        bodyTurret.setTransform(bodyTurret.getPosition(), Util.normalizeAngle(bodyTurret.getAngle()) + getAngleRotationToTarget());
 
         tankPrevRotation = vehicle.getBody().getAngle();
     }
 
     //Находим разницу между углами и находим наименьшее расстояние на замкнутой прямой (0,360)
     private float getAngleRotationToTarget(){
-        float angle = (float) Math.atan2(targetVector.y - turret.getPosition().y, targetVector.x - turret.getPosition().x);
+        float angle = (float) Math.atan2(targetVector.y - bodyTurret.getPosition().y, targetVector.x - bodyTurret.getPosition().x);
 
         float angleBetween = angle < 0 ? (float) (angle + Math.toRadians(360)) : angle;
-        float angleTurret = turret.getAngle() < 0 ? (float) (turret.getAngle() + Math.toRadians(360)) : turret.getAngle();
+        float angleTurret = bodyTurret.getAngle() < 0 ? (float) (bodyTurret.getAngle() + Math.toRadians(360)) : bodyTurret.getAngle();
 
         float speedRotation;
         if(Math.abs(angleTurret - angleBetween) < 0.1) //  0.1 - возможнная разница углов, для устранения частого обновления

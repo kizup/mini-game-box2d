@@ -1,7 +1,6 @@
 package ru.kizup.minibox2dgame.model;
 
 import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.math.Polygon;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.Body;
 import com.badlogic.gdx.physics.box2d.BodyDef;
@@ -46,7 +45,7 @@ public abstract class TankTurret {
 
     protected float tankPrevRotation;
     protected Vehicle vehicle;
-    protected Body turret;
+    protected Body bodyTurret;
     protected int steer;
 
     TankTurret(Vector2 position, Vehicle vehicle, World world, Vector2 margin) {
@@ -65,7 +64,7 @@ public abstract class TankTurret {
 
         //Pi / 2
         def.angle = (float) (vehicle.getBody().getAngle() + Math.toRadians(-90));
-        turret = world.createBody(def);
+        bodyTurret = world.createBody(def);
 
         // init shape
         FixtureDef fixtureDef = new FixtureDef();
@@ -73,11 +72,11 @@ public abstract class TankTurret {
         // Колесо не участвует в расчетах столкновения: возникающие осложнения не нужны
         fixtureDef.isSensor = true;
         fixtureDef.friction = 0;
-        loader.attachFixture(turret, "TankTurret", fixtureDef, BOTTLE_WIDTH);
+        loader.attachFixture(bodyTurret, "TankTurret", fixtureDef, BOTTLE_WIDTH);
 
         //create joint to connect tankTower to body
         RevoluteJointDef jointdef=new RevoluteJointDef();
-        jointdef.initialize(vehicle.getBody(), turret, turret.getWorldCenter());
+        jointdef.initialize(vehicle.getBody(), bodyTurret, bodyTurret.getWorldCenter());
         jointdef.enableMotor=false;
         jointdef.localAnchorA.set(margin);
 
@@ -133,7 +132,7 @@ public abstract class TankTurret {
     }
 
     void setAngle(float angle) {
-        turret.setTransform(turret.getPosition(), (float) (vehicle.getBody().getAngle() + Math.toRadians(angle)));
+        bodyTurret.setTransform(bodyTurret.getPosition(), (float) (vehicle.getBody().getAngle() + Math.toRadians(angle)));
     }
 
     /**
@@ -150,7 +149,7 @@ public abstract class TankTurret {
         Vector2 directionVector;
         if (getLocalVelocity().y > 0) directionVector = new Vector2(0, 1);
         else directionVector = new Vector2(0, -1);
-        return directionVector.rotate((float) Math.toDegrees(turret.getAngle()));
+        return directionVector.rotate((float) Math.toDegrees(bodyTurret.getAngle()));
     }
 
     /**
@@ -159,7 +158,7 @@ public abstract class TankTurret {
      * @return
      */
     private Vector2 getKillVelocityVector() {
-        Vector2 velocity = turret.getLinearVelocity();
+        Vector2 velocity = bodyTurret.getLinearVelocity();
         Vector2 sidewaysAxis = getDirectionVector();
         double dotProd = velocity.dot(sidewaysAxis);
         float x = (float) (sidewaysAxis.x * dotProd);
@@ -171,14 +170,14 @@ public abstract class TankTurret {
      * Удаляет всю боковую скорость от этой скорости колеса
      */
     public void killSidewaysVelocity() {
-        turret.setLinearVelocity(getKillVelocityVector());
+        bodyTurret.setLinearVelocity(getKillVelocityVector());
     }
 
     public Body getTurretBody() {
-        return turret;
+        return bodyTurret;
     }
 
     public void setTurretBody(Body wheelBody) {
-        this.turret = wheelBody;
+        this.bodyTurret = wheelBody;
     }
 }

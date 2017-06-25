@@ -5,8 +5,6 @@ import com.badlogic.gdx.Input;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.World;
 
-import ru.kizup.minibox2dgame.util.Util;
-
 import static ru.kizup.minibox2dgame.screen.GameScreen.STEER_LEFT;
 import static ru.kizup.minibox2dgame.screen.GameScreen.STEER_NONE;
 import static ru.kizup.minibox2dgame.screen.GameScreen.STEER_RIGHT;
@@ -37,15 +35,15 @@ public class PlayerTankTurret extends TankTurret{
 
         switch (steer) {
             case STEER_RIGHT:{
-                turret.setTransform(turret.getPosition(), turret.getAngle() - SPEED_ROTATION);
+                bodyTurret.setTransform(bodyTurret.getPosition(), bodyTurret.getAngle() - SPEED_ROTATION);
                 break;
             }
             case STEER_LEFT: {
-                turret.setTransform(turret.getPosition(), turret.getAngle() + SPEED_ROTATION);
+                bodyTurret.setTransform(bodyTurret.getPosition(), bodyTurret.getAngle() + SPEED_ROTATION);
                 break;
             }
             case STEER_NONE: {
-                turret.setTransform(turret.getPosition(), turret.getAngle() + tankRotation);
+                bodyTurret.setTransform(bodyTurret.getPosition(), bodyTurret.getAngle() + tankRotation);
                 break;
             }
         }

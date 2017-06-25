@@ -19,7 +19,7 @@ public class BoxProp {
     private float y;
     private Body boxBody;
 
-    public BoxProp(float width, float length, float x, float y, World world) {
+    public BoxProp(float width, float length, float x, float y, World world, short maskBits) {
         this.width = width;
         this.length = length;
         this.x = x;
@@ -37,7 +37,11 @@ public class BoxProp {
         FixtureDef fixtureDef = new FixtureDef();
         fixtureDef.shape = shape;
         fixtureDef.restitution = 0.4f;
+        fixtureDef.filter.maskBits = maskBits;
+        fixtureDef.filter.categoryBits = ru.kizup.minibox2dgame.controller.CollisionCategory.CATEGORY_SCENERY;
+
         boxBody.createFixture(fixtureDef);
+        boxBody.setUserData(this);
     }
 
 }
