@@ -14,4 +14,6 @@ public interface Vehicle {
 
     Body getBody();
 
+    void destroy();
+
 }

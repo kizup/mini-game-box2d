@@ -15,6 +15,7 @@ import com.badlogic.gdx.maps.tiled.TiledMap;
 import com.badlogic.gdx.maps.tiled.TiledMapRenderer;
 import com.badlogic.gdx.maps.tiled.TmxMapLoader;
 import com.badlogic.gdx.maps.tiled.renderers.OrthogonalTiledMapRenderer;
+import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Matrix4;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.Box2DDebugRenderer;
@@ -37,9 +38,6 @@ import ru.kizup.minibox2dgame.model.Tank;
 import static ru.kizup.minibox2dgame.MiniGame.PIXELS_TO_METERS;
 
 public class GameScreen extends ScreenAdapter {
-
-    private ParticleEffect particleEffect;
-    private MiniGame game;
 
     public static final int STEER_NONE = 0;
     public static final int STEER_RIGHT = 1;
@@ -71,6 +69,9 @@ public class GameScreen extends ScreenAdapter {
     private TiledMap tiledMap;
     private TiledMapRenderer mapRenderer;
     private ShapeRenderer shapeRenderer;
+    private ParticleEffect particleEffect;
+    private ParticleEffect explosionEffect;
+    private MiniGame game;
 
     public GameScreen(MiniGame miniGame) {
         this.game = miniGame;
@@ -135,14 +136,23 @@ public class GameScreen extends ScreenAdapter {
         particleEffect.load(Gdx.files.internal("particles/fire.p"), Gdx.files.internal("particles/"));
         particleEffect.getEmitters().first().getAngle().setRelative(true);
 
+        explosionEffect = new ParticleEffect();
+        explosionEffect.load(Gdx.files.internal("particles/explosion.p"), Gdx.files.internal("particles/"));
+
         shapeRenderer = new ShapeRenderer();
         shapeRenderer.setAutoShapeType(true);
         world.setContactListener(new ContactWorldListener());
     }
 
     private void initTanks() {
-        tank = new PlayerTank(2, 4, new Vector2(10, 10), 0, 100, 5, 80, world);
-        tankEnemy = new EnemyTank(2, 4, new Vector2(20, 20), 0, 20, 5, 40, world, tank);
+        tank = new PlayerTank(2, 4, new Vector2(10, 10), 0, 40, 5, 40, world);
+        initEnemyTank();
+    }
+
+    private void initEnemyTank() {
+        int x = MathUtils.random(5, (int) WIDTH_IN_METERS - 5);
+        int y = MathUtils.random(5, (int) HEIGHT_IN_METERS - 5);
+        tankEnemy = new EnemyTank(2, 4, new Vector2(x, y), 0, 20, 5, 40, world, tank);
     }
 
     @Override
@@ -165,24 +175,33 @@ public class GameScreen extends ScreenAdapter {
 //        particleEffect.getEmitters().first().getAngle().setLow(tank.getBody().getTransform().getRotation());
 //        particleEffect.update(delta);
 
+        explosionEffect.update(delta);
+
         batch.begin();
 //        TODO Draw sprites
 //        particleEffect.draw(batch);
+        explosionEffect.draw(batch);
         batch.end();
         updateUI();
 
-        if(tank.getHP() < 0){
+        if (tank.getHP() < 0) {
             tank.getBody().setActive(false);
-//            world.destroyBody(tank.getBody());
-        }else {
+        } else {
             tank.update(delta);
         }
-        if(tankEnemy.getHP() < 0){
-            tankEnemy.getBody().setActive(false);
-//            world.destroyBody(tankEnemy.getBody());
-        }else {
-            tankEnemy.update(delta);
+
+        if (tankEnemy != null) {
+            if (tankEnemy.getHP() < 0) {
+                explosionEffect.reset();
+                explosionEffect.setPosition(tankEnemy.getPositionX(), tankEnemy.getPositionY());
+                tankEnemy.destroy();
+                tankEnemy = null;
+                initEnemyTank();
+            } else {
+                tankEnemy.update(delta);
+            }
         }
+
         world.step(delta, 6, 2);
         world.clearForces();
 

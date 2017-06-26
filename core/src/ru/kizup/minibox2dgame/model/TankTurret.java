@@ -47,6 +47,7 @@ public abstract class TankTurret {
     protected Vehicle vehicle;
     protected Body bodyTurret;
     protected int steer;
+    protected float rotationCoeff;
 
     TankTurret(Vector2 position, Vehicle vehicle, World world, Vector2 margin) {
         this.position = position;

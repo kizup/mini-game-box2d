@@ -28,24 +28,31 @@ import static ru.kizup.minibox2dgame.screen.GameScreen.STEER_RIGHT;
 
 public abstract class Tank implements Vehicle {
 
-        /*
-            pars is an object with possible attributes:
+    /**
+     * pars is an object with possible attributes:
+     * <p>
+     * width - width of the car in meters
+     * length - length of the car in meters
+     * position - starting position of the car, array [x, y] in meters
+     * angle - starting angle of the car, degrees
+     * max_steer_angle - maximum angle the wheels turn when steering, degrees
+     * max_speed       - maximum speed of the car, km/h
+     * power - engine force, in newtons, that is applied to EACH powered wheel
+     * wheels - wheel definitions: [{x, y, rotatable, powered}}, ...] where
+     * x is wheel position in meters relative to car body center
+     * y is wheel position in meters relative to car body center
+     * revolving - boolean, does this turn rotate when steering?
+     * powered - is force applied to this wheel when accelerating/braking?
+     * koefRotation - коэффициент поворота танка от 0 до power. 1 - не изменять скорость поворота.
+     **/
 
-            width - width of the car in meters
-            length - length of the car in meters
-            position - starting position of the car, array [x, y] in meters
-            angle - starting angle of the car, degrees
-            max_steer_angle - maximum angle the wheels turn when steering, degrees
-            max_speed       - maximum speed of the car, km/h
-            power - engine force, in newtons, that is applied to EACH powered wheel
-            wheels - wheel definitions: [{x, y, rotatable, powered}}, ...] where
-                     x is wheel position in meters relative to car body center
-                     y is wheel position in meters relative to car body center
-                     revolving - boolean, does this turn rotate when steering?
-                     powered - is force applied to this wheel when accelerating/braking?
-            koefRotation - коэффициент поворота танка от 0 до power. 1 - не изменять скорость поворота.
-    */
-
+    protected static final long COOLDOWN_TIME = 1500;
+    protected TankTurret tankTurret;
+    protected World world;
+    protected int accelerate;
+    protected int steer;
+    protected int bullet;
+    protected long shootTime;
     private float width;
     private float length;
     private Vector2 position;
@@ -64,19 +71,8 @@ public abstract class Tank implements Vehicle {
     private List<Bullet> bulletList = new ArrayList<Bullet>();
     private int HP;
 
-    protected TankTurret tankTurret;
-    protected World world;
-    protected int accelerate;
-    protected int steer;
-    protected int bullet;
-
-    @Override
-    public abstract boolean isEnemy();
-
-    public abstract void handleInput();
-
     public Tank(float width, float length, Vector2 position, float angle, float power, float maxSteerAngle, float maxSpeed, World world, int koefRotation) {
-        if(koefRotation == 0 || koefRotation > power)
+        if (koefRotation == 0 || koefRotation > power)
             throw new ArithmeticException("Коэффициент поворота танка должен быть в диапазоне [1;power]");
 
         this.width = width;
@@ -102,6 +98,11 @@ public abstract class Tank implements Vehicle {
         initWheels();
         initTankTower();
     }
+
+    @Override
+    public abstract boolean isEnemy();
+
+    public abstract void handleInput();
 
     private void initCarBody() {
         BodyDef def = new BodyDef();
@@ -140,7 +141,7 @@ public abstract class Tank implements Vehicle {
         wheels[1] = new Wheel(-1, 1.2f, 0.4f, length, false, true, this, world);
     }
 
-    public void initTankTower(){
+    public void initTankTower() {
         tankTurret = new PlayerTankTurret(new Vector2(1, 2f), this, world, new Vector2(0, 1f));
     }
 
@@ -188,9 +189,20 @@ public abstract class Tank implements Vehicle {
     protected void setSpeed(float speed) {
         Vector2 velocity = tankBody.getLinearVelocity();
         velocity = velocity.nor();
-        velocity = new Vector2(velocity.x*((speed*1000.0f)/3600.0f),
-                velocity.y*((speed*1000.0f)/3600.0f));
+        velocity = new Vector2(velocity.x * ((speed * 1000.0f) / 3600.0f),
+                velocity.y * ((speed * 1000.0f) / 3600.0f));
         tankBody.setLinearVelocity(velocity);
+    }
+
+    @Override
+    public void destroy() {
+        world.destroyBody(tankBody);
+        world.destroyBody(tankTurret.getTurretBody());
+        world.destroyBody(wheels[0].getWheelBody());
+        world.destroyBody(wheels[1].getWheelBody());
+        wheels[0] = null;
+        wheels[1] = null;
+        tankTurret = null;
     }
 
     public void update(float delta) {
@@ -224,17 +236,17 @@ public abstract class Tank implements Vehicle {
         Vector2 forceVector = new Vector2(power * baseVector.x, power * baseVector.y);
         switch (steer) {
             case STEER_LEFT: {
-                if(accelerate != ACC_ACCELERATE)
-                    leftBaseVector = new Vector2(0,( power * 1.5f )/ (koefRotation / 2));  //Двигаем гусли, если танк на месте на месте
+                if (accelerate != ACC_ACCELERATE)
+                    leftBaseVector = new Vector2(0, (power * 1.5f) / (koefRotation / 2));  //Двигаем гусли, если танк на месте на месте
                 else
-                    leftBaseVector = new Vector2( 0, (power - (power / koefRotation))*-1); //Скорость поворота
+                    leftBaseVector = new Vector2(0, (power - (power / koefRotation)) * -1); //Скорость поворота
                 break;
             }
             case STEER_RIGHT: {
-                if(accelerate != ACC_ACCELERATE)
-                    rightBaseVector = new Vector2(0, ( power * 1.5f )/ (koefRotation / 2));
+                if (accelerate != ACC_ACCELERATE)
+                    rightBaseVector = new Vector2(0, (power * 1.5f) / (koefRotation / 2));
                 else
-                    rightBaseVector = new Vector2( 0, (power - (power / koefRotation))*-1 );
+                    rightBaseVector = new Vector2(0, (power - (power / koefRotation)) * -1);
                 break;
             }
             case STEER_NONE: {
@@ -269,14 +281,17 @@ public abstract class Tank implements Vehicle {
             setSpeed(0);
         }
 
-        if (bullet == BULLET_EXIST) {
-            bulletList.add(new Bullet(world, tankTurret, OptionsBullet.getBullet(OptionsBullet.Type.YBR_365)));
+        if (!isEnemy()) {
+            if (bullet == BULLET_EXIST && System.currentTimeMillis() - shootTime >= COOLDOWN_TIME) {
+                bulletList.add(new Bullet(world, tankTurret, OptionsBullet.getBullet(OptionsBullet.Type.YBR_365)));
+                shootTime = System.currentTimeMillis();
+            }
         }
 
-        if(bulletList.size() > 0){
-            for(int i = 0; i < bulletList.size(); i++){
+        if (bulletList.size() > 0) {
+            for (int i = 0; i < bulletList.size(); i++) {
                 bulletList.get(i).update(delta);
-                if(bulletList.get(i).isDestroy()){
+                if (bulletList.get(i).isDestroy()) {
                     bulletList.get(i).getBody().setActive(false);
                     world.destroyBody(bulletList.get(i).getBody());
                     bulletList.remove(i);
@@ -302,11 +317,11 @@ public abstract class Tank implements Vehicle {
         return tankBody;
     }
 
-    public int getHP(){
+    public int getHP() {
         return HP;
     }
 
-    public void minHP(int hp){
+    public void minHP(int hp) {
         HP -= hp;
     }
 }

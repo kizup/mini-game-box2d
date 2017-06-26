@@ -1,5 +1,6 @@
 package ru.kizup.minibox2dgame.model;
 
+import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.World;
 
@@ -15,6 +16,7 @@ public class EnemyTankTurret extends TankTurret{
 
     EnemyTankTurret(Vector2 position, Vehicle vehicle, World world, Vector2 margin) {
         super(position, vehicle, world, margin);
+        rotationCoeff = 5f;
     }
 
     @Override
@@ -29,6 +31,7 @@ public class EnemyTankTurret extends TankTurret{
 
     //Находим разницу между углами и находим наименьшее расстояние на замкнутой прямой (0,360)
     private float getAngleRotationToTarget(){
+        float delta = Gdx.graphics.getDeltaTime();
         float angle = (float) Math.atan2(targetVector.y - bodyTurret.getPosition().y, targetVector.x - bodyTurret.getPosition().x);
 
         float angleBetween = angle < 0 ? (float) (angle + Math.toRadians(360)) : angle;
@@ -37,10 +40,16 @@ public class EnemyTankTurret extends TankTurret{
         float speedRotation;
         if(Math.abs(angleTurret - angleBetween) < 0.1) //  0.1 - возможнная разница углов, для устранения частого обновления
             speedRotation = 0;
-        else if(angleBetween >= angleTurret){
-            speedRotation = angleBetween - angleTurret > (angleTurret + Math.toRadians(360) - angleBetween )? -1 * SPEED_ROTATION: 1 * SPEED_ROTATION;
-        }else{
-            speedRotation = angleTurret - angleBetween > (angleBetween + Math.toRadians(360) - angleTurret )? 1 * SPEED_ROTATION: -1 * SPEED_ROTATION;
+        else if (angleBetween >= angleTurret){
+            // Умножение на delta для плавности вращения башни, скорость регулируется параметром rotationCoeff
+            speedRotation = angleBetween - angleTurret > (angleTurret + Math.toRadians(360) - angleBetween)
+                    ? -rotationCoeff * SPEED_ROTATION * delta
+                    : rotationCoeff * SPEED_ROTATION * delta;
+        } else {
+            // Умножение на delta для плавности вращения башни, скорость регулируется параметром rotationCoeff
+            speedRotation = angleTurret - angleBetween > (angleBetween + Math.toRadians(360) - angleTurret)
+                    ? rotationCoeff * SPEED_ROTATION * delta
+                    : -rotationCoeff * SPEED_ROTATION * delta;
         }
 
         return speedRotation;

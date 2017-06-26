@@ -17,6 +17,7 @@ public class PlayerTankTurret extends TankTurret{
 
     PlayerTankTurret(Vector2 position, Vehicle vehicle, World world, Vector2 margin) {
         super(position, vehicle, world, margin);
+        rotationCoeff = 8f;
     }
 
     @Override
@@ -33,13 +34,14 @@ public class PlayerTankTurret extends TankTurret{
 
         float tankRotation = vehicle.getBody().getAngle() - tankPrevRotation;
 
+        float delta = Gdx.graphics.getDeltaTime();
         switch (steer) {
             case STEER_RIGHT:{
-                bodyTurret.setTransform(bodyTurret.getPosition(), bodyTurret.getAngle() - SPEED_ROTATION);
+                bodyTurret.setTransform(bodyTurret.getPosition(), bodyTurret.getAngle() - SPEED_ROTATION * rotationCoeff * delta);
                 break;
             }
             case STEER_LEFT: {
-                bodyTurret.setTransform(bodyTurret.getPosition(), bodyTurret.getAngle() + SPEED_ROTATION);
+                bodyTurret.setTransform(bodyTurret.getPosition(), bodyTurret.getAngle() + SPEED_ROTATION * rotationCoeff * delta);
                 break;
             }
             case STEER_NONE: {
