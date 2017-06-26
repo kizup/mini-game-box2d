@@ -1,0 +1,64 @@
+package ru.kizup.minibox2dgame.screen;
+
+import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.ScreenAdapter;
+import com.badlogic.gdx.graphics.GL20;
+import com.badlogic.gdx.scenes.scene2d.InputEvent;
+import com.badlogic.gdx.scenes.scene2d.InputListener;
+import com.badlogic.gdx.scenes.scene2d.Stage;
+import com.badlogic.gdx.scenes.scene2d.ui.Skin;
+import com.badlogic.gdx.scenes.scene2d.ui.Table;
+import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
+
+import ru.kizup.minibox2dgame.MiniGame;
+
+/**
+ * Created by Neuron on 22.06.2017.
+ */
+
+public class MainUIScreen extends ScreenAdapter {
+
+    private Stage stage;
+    private MiniGame miniGame;
+
+    public MainUIScreen(final MiniGame miniGame) {
+        this.miniGame = miniGame;
+
+        stage = new Stage();
+        Gdx.input.setInputProcessor(stage);
+        Skin skin = new Skin(Gdx.files.internal("uiskin.json"));
+
+        Table table = new Table();
+        stage.addActor(table);
+        table.setSize(Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
+        table.setFillParent(true);
+
+        TextButton button = new TextButton("Start Game", skin);
+        button.addListener(new InputListener() {
+            public boolean touchDown (InputEvent event, float x, float y, int pointer, int button) {
+                miniGame.startGame();
+                return true;
+            }
+        });
+        table.add(button);
+    }
+
+    @Override
+    public void render(float delta) {
+        super.render(delta);
+
+        Gdx.gl.glClearColor(0.2f, 0.2f, 0.2f, 1);
+        Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
+
+        stage.draw();
+    }
+
+
+    public void resize (int width, int height) {
+        stage.getViewport().update(width, height, true);
+    }
+
+    public void dispose () {
+        stage.dispose();
+    }
+}
