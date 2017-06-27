@@ -1,9 +1,10 @@
-package ru.kizup.minibox2dgame.model;
+package ru.kizup.minibox2dgame.model.turret;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.World;
 
+import ru.kizup.minibox2dgame.model.tank.Vehicle;
 import ru.kizup.minibox2dgame.util.Util;
 
 /**
@@ -14,7 +15,7 @@ public class EnemyTankTurret extends TankTurret{
 
     private Vector2 targetVector;
 
-    EnemyTankTurret(Vector2 position, Vehicle vehicle, World world, Vector2 margin) {
+    public EnemyTankTurret(Vector2 position, Vehicle vehicle, World world, Vector2 margin) {
         super(position, vehicle, world, margin);
         rotationCoeff = 5f;
     }
@@ -22,11 +23,9 @@ public class EnemyTankTurret extends TankTurret{
     @Override
     public void update() {
         super.update();
-//        bodyTurret.setTransform(bodyTurret.getPosition(), vehicle.getBody().getAngle() - tankPrevRotation);
-
-        bodyTurret.setTransform(bodyTurret.getPosition(), Util.normalizeAngle(bodyTurret.getAngle()) + getAngleRotationToTarget());
-
-        tankPrevRotation = vehicle.getBody().getAngle();
+        bodyTurret.setTransform(bodyTurret.getPosition(),
+                Util.normalizeAngle(bodyTurret.getAngle()) + getAngleRotationToTarget());
+        setTankPrevRotation(vehicle.getBody().getAngle());
     }
 
     //Находим разницу между углами и находим наименьшее расстояние на замкнутой прямой (0,360)
@@ -55,7 +54,7 @@ public class EnemyTankTurret extends TankTurret{
         return speedRotation;
     }
 
-    void setTargetVector(Vector2 targetVector){
+    public void setTargetVector(Vector2 targetVector){
         this.targetVector = targetVector;
     }
 }

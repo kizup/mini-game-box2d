@@ -2,7 +2,9 @@ package ru.kizup.minibox2dgame.screen;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.ScreenAdapter;
+import com.badlogic.gdx.files.FileHandle;
 import com.badlogic.gdx.graphics.GL20;
+import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.scenes.scene2d.InputEvent;
 import com.badlogic.gdx.scenes.scene2d.InputListener;
 import com.badlogic.gdx.scenes.scene2d.Stage;
@@ -20,17 +22,20 @@ public class MainUIScreen extends ScreenAdapter {
 
     private Stage stage;
     private MiniGame miniGame;
+    private OrthographicCamera camera;
 
     public MainUIScreen(final MiniGame miniGame) {
         this.miniGame = miniGame;
 
+        camera = new OrthographicCamera(Gdx.graphics.getWidth() / 2, Gdx.graphics.getHeight() / 2);
         stage = new Stage();
         Gdx.input.setInputProcessor(stage);
-        Skin skin = new Skin(Gdx.files.internal("uiskin.json"));
+        FileHandle uiSkin = Gdx.files.internal("uiskin.json");
+        Skin skin = new Skin(uiSkin);
 
         Table table = new Table();
         stage.addActor(table);
-        table.setSize(Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
+        table.setSize(camera.viewportWidth, camera.viewportHeight);
         table.setFillParent(true);
 
         TextButton button = new TextButton("Start Game", skin);
@@ -47,6 +52,7 @@ public class MainUIScreen extends ScreenAdapter {
     public void render(float delta) {
         super.render(delta);
 
+        camera.update();
         Gdx.gl.glClearColor(0.2f, 0.2f, 0.2f, 1);
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
 

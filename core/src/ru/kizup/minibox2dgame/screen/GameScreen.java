@@ -8,7 +8,6 @@ import com.badlogic.gdx.graphics.FPSLogger;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
-import com.badlogic.gdx.graphics.g2d.ParticleEffect;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.maps.tiled.TiledMap;
@@ -28,24 +27,18 @@ import com.badlogic.gdx.utils.Align;
 import com.badlogic.gdx.utils.Array;
 
 import ru.kizup.minibox2dgame.MiniGame;
+import ru.kizup.minibox2dgame.controller.Assets;
 import ru.kizup.minibox2dgame.controller.CollisionCategory;
 import ru.kizup.minibox2dgame.controller.ContactWorldListener;
+import ru.kizup.minibox2dgame.controller.TankStateListener;
 import ru.kizup.minibox2dgame.model.BoxProp;
-import ru.kizup.minibox2dgame.model.EnemyTank;
-import ru.kizup.minibox2dgame.model.PlayerTank;
-import ru.kizup.minibox2dgame.model.Tank;
+import ru.kizup.minibox2dgame.model.tank.EnemyTank;
+import ru.kizup.minibox2dgame.model.tank.PlayerTank;
+import ru.kizup.minibox2dgame.model.tank.Tank;
 
 import static ru.kizup.minibox2dgame.MiniGame.PIXELS_TO_METERS;
 
 public class GameScreen extends ScreenAdapter {
-
-    public static final int STEER_NONE = 0;
-    public static final int STEER_RIGHT = 1;
-    public static final int STEER_LEFT = 2;
-
-    public static final int ACC_NONE = 0;
-    public static final int ACC_ACCELERATE = 1;
-    public static final int ACC_BRAKE = 2;
 
     public static final int BULLET_NONE = 0;
     public static final int BULLET_EXIST = 1;
@@ -69,14 +62,12 @@ public class GameScreen extends ScreenAdapter {
     private TiledMap tiledMap;
     private TiledMapRenderer mapRenderer;
     private ShapeRenderer shapeRenderer;
-    private ParticleEffect particleEffect;
-    private ParticleEffect explosionEffect;
     private MiniGame game;
 
     public GameScreen(MiniGame miniGame) {
         this.game = miniGame;
-        WIDTH_IN_METERS = Gdx.graphics.getWidth() / PIXELS_TO_METERS * 2;
-        HEIGHT_IN_METERS = Gdx.graphics.getHeight() / PIXELS_TO_METERS * 2;
+        WIDTH_IN_METERS = Gdx.graphics.getWidth() / PIXELS_TO_METERS * 1.2f;
+        HEIGHT_IN_METERS = Gdx.graphics.getHeight() / PIXELS_TO_METERS * 1.2f;
 
         batch = new SpriteBatch();
         debugRenderer = new Box2DDebugRenderer();
@@ -95,10 +86,10 @@ public class GameScreen extends ScreenAdapter {
         // Right wall
         boxProps.add(new BoxProp(1, HEIGHT_IN_METERS, WIDTH_IN_METERS - 0.5f, HEIGHT_IN_METERS / 2, world, CollisionCategory.MASK_BORDER));
 
-        Vector2 center = new Vector2(WIDTH_IN_METERS / 2, HEIGHT_IN_METERS / 2);
-        boxProps.add(new BoxProp(3, 3, center.x - 10, center.y, world, CollisionCategory.MASK_SCENERY));
-        boxProps.add(new BoxProp(6, 6, center.x + 3, center.y, world, CollisionCategory.MASK_SCENERY));
-        boxProps.add(new BoxProp(1, 1, center.x + 2, center.y + 10f, world, CollisionCategory.MASK_SCENERY));
+//        Vector2 center = new Vector2(WIDTH_IN_METERS / 2, HEIGHT_IN_METERS / 2);
+//        boxProps.add(new BoxProp(3, 3, center.x - 10, center.y, world, CollisionCategory.MASK_SCENERY));
+//        boxProps.add(new BoxProp(6, 6, center.x + 3, center.y, world, CollisionCategory.MASK_SCENERY));
+//        boxProps.add(new BoxProp(1, 1, center.x + 2, center.y + 10f, world, CollisionCategory.MASK_SCENERY));
 
         font = new BitmapFont();
         font.setColor(Color.BLACK);
@@ -132,13 +123,6 @@ public class GameScreen extends ScreenAdapter {
         tiledMap = new TmxMapLoader().load("map/1.tmx");
         mapRenderer = new OrthogonalTiledMapRenderer(tiledMap);
 
-        particleEffect = new ParticleEffect();
-        particleEffect.load(Gdx.files.internal("particles/fire.p"), Gdx.files.internal("particles/"));
-        particleEffect.getEmitters().first().getAngle().setRelative(true);
-
-        explosionEffect = new ParticleEffect();
-        explosionEffect.load(Gdx.files.internal("particles/explosion.p"), Gdx.files.internal("particles/"));
-
         shapeRenderer = new ShapeRenderer();
         shapeRenderer.setAutoShapeType(true);
         world.setContactListener(new ContactWorldListener());
@@ -146,6 +130,17 @@ public class GameScreen extends ScreenAdapter {
 
     private void initTanks() {
         tank = new PlayerTank(2, 4, new Vector2(10, 10), 0, 40, 5, 40, world);
+        tank.setTankStateListener(new TankStateListener() {
+            @Override
+            public void destroyBullet(Vector2 position) {
+                Assets.sSmallExplosionEffect.reset();
+                Assets.sSmallExplosionEffect.setPosition(position.x * MiniGame.PIXELS_TO_METERS, position.y * MiniGame.PIXELS_TO_METERS);
+            }
+
+            @Override
+            public void destroyTank(Tank tank) {
+            }
+        });
         initEnemyTank();
     }
 
@@ -153,6 +148,18 @@ public class GameScreen extends ScreenAdapter {
         int x = MathUtils.random(5, (int) WIDTH_IN_METERS - 5);
         int y = MathUtils.random(5, (int) HEIGHT_IN_METERS - 5);
         tankEnemy = new EnemyTank(2, 4, new Vector2(x, y), 0, 20, 5, 40, world, tank);
+        tankEnemy.setTankStateListener(new TankStateListener() {
+            @Override
+            public void destroyBullet(Vector2 position) {
+
+            }
+
+            @Override
+            public void destroyTank(Tank tank) {
+                tankEnemy = null;
+                initEnemyTank();
+            }
+        });
     }
 
     @Override
@@ -169,31 +176,27 @@ public class GameScreen extends ScreenAdapter {
         mapRenderer.setView(camera);
         mapRenderer.render();
 
-//        particleEffect.setPosition(tank.getPositionX(), tank.getPositionY());
-//        particleEffect.getEmitters().first().getAngle().setRelative(false);
-//        particleEffect.getEmitters().first().getAngle().setHigh(tank.getBody().getTransform().getRotation());
-//        particleEffect.getEmitters().first().getAngle().setLow(tank.getBody().getTransform().getRotation());
-//        particleEffect.update(delta);
-
-        explosionEffect.update(delta);
+        Assets.sExplosionEffect.update(delta);
+        Assets.sSmallExplosionEffect.update(delta);
 
         batch.begin();
-//        TODO Draw sprites
-//        particleEffect.draw(batch);
-        explosionEffect.draw(batch);
+        //TODO Draw sprites
+        Assets.sExplosionEffect.draw(batch);
+        Assets.sSmallExplosionEffect.draw(batch);
         batch.end();
         updateUI();
 
-        if (tank.getHP() < 0) {
+        // TODO move to tank update
+        if (tank.getHitPoints() < 0) {
             tank.getBody().setActive(false);
         } else {
             tank.update(delta);
         }
 
         if (tankEnemy != null) {
-            if (tankEnemy.getHP() < 0) {
-                explosionEffect.reset();
-                explosionEffect.setPosition(tankEnemy.getPositionX(), tankEnemy.getPositionY());
+            if (tankEnemy.getHitPoints() < 0) {
+                Assets.sExplosionEffect.reset();
+                Assets.sExplosionEffect.setPosition(tankEnemy.getPositionX(), tankEnemy.getPositionY());
                 tankEnemy.destroy();
                 tankEnemy = null;
                 initEnemyTank();
@@ -210,8 +213,6 @@ public class GameScreen extends ScreenAdapter {
                 .cpy()
                 .scale(PIXELS_TO_METERS, PIXELS_TO_METERS, 0);
         debugRenderer.render(world, debugMatrix);
-
-        if (particleEffect.isComplete()) particleEffect.reset();
     }
 
     private void handleInput() {
@@ -226,13 +227,9 @@ public class GameScreen extends ScreenAdapter {
         fpsLabel.setText("FPS: " + Gdx.graphics.getFramesPerSecond());
         stage.draw();
 
-        float partOfMaxSpeed = (float) (tank.getSpeedKmH() / tank.getMaxSpeed());
-        if (partOfMaxSpeed > 1) partOfMaxSpeed = 1;
-
-//        shapeRenderer.begin();
-//        shapeRenderer.set(ShapeRenderer.ShapeType.Line);
-//        shapeRenderer.line(Gdx.graphics.getWidth() / 2, Gdx.graphics.getHeight() / 2, (float) ((Gdx.graphics.getWidth() / 2) - 100 * Math.atan(partOfMaxSpeed)), (float) ((Gdx.graphics.getHeight() / 2) + 100 * Math.cos(partOfMaxSpeed)));
-//        shapeRenderer.end();
+//        Непонятно для чего
+//        float partOfMaxSpeed = (float) (tank.getSpeedKmH() / tank.getMaxSpeed());
+//        if (partOfMaxSpeed > 1) partOfMaxSpeed = 1;
     }
 
     private void updateCamera() {
@@ -261,7 +258,6 @@ public class GameScreen extends ScreenAdapter {
 
     @Override
     public void dispose() {
-//        img.dispose();
         world.dispose();
         debugRenderer.dispose();
         batch.dispose();

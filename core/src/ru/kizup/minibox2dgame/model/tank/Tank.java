@@ -1,10 +1,12 @@
-package ru.kizup.minibox2dgame.model;
+package ru.kizup.minibox2dgame.model.tank;
 
+import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.g2d.ParticleEffect;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.Body;
 import com.badlogic.gdx.physics.box2d.BodyDef;
 import com.badlogic.gdx.physics.box2d.FixtureDef;
+import com.badlogic.gdx.physics.box2d.MassData;
 import com.badlogic.gdx.physics.box2d.PolygonShape;
 import com.badlogic.gdx.physics.box2d.World;
 import com.badlogic.gdx.utils.Array;
@@ -13,20 +15,29 @@ import java.util.ArrayList;
 import java.util.List;
 
 import ru.kizup.minibox2dgame.MiniGame;
+import ru.kizup.minibox2dgame.controller.Assets;
+import ru.kizup.minibox2dgame.controller.TankStateListener;
+import ru.kizup.minibox2dgame.model.Bullet;
+import ru.kizup.minibox2dgame.model.OptionsBullet;
+import ru.kizup.minibox2dgame.model.Track;
+import ru.kizup.minibox2dgame.model.turret.PlayerTankTurret;
+import ru.kizup.minibox2dgame.model.turret.TankTurret;
 
-import static ru.kizup.minibox2dgame.screen.GameScreen.ACC_ACCELERATE;
-import static ru.kizup.minibox2dgame.screen.GameScreen.ACC_BRAKE;
-import static ru.kizup.minibox2dgame.screen.GameScreen.ACC_NONE;
 import static ru.kizup.minibox2dgame.screen.GameScreen.BULLET_EXIST;
-import static ru.kizup.minibox2dgame.screen.GameScreen.STEER_LEFT;
-import static ru.kizup.minibox2dgame.screen.GameScreen.STEER_NONE;
-import static ru.kizup.minibox2dgame.screen.GameScreen.STEER_RIGHT;
 
 /**
  * Created by dpuzikov on 21.06.17.
  */
 
 public abstract class Tank implements Vehicle {
+
+    static final int STEER_NONE = 0;
+    static final int STEER_RIGHT = 1;
+    static final int STEER_LEFT = 2;
+
+    static final int ACC_NONE = 0;
+    static final int ACC_ACCELERATE = 1;
+    static final int ACC_BRAKE = 2;
 
     /**
      * pars is an object with possible attributes:
@@ -35,10 +46,10 @@ public abstract class Tank implements Vehicle {
      * length - length of the car in meters
      * position - starting position of the car, array [x, y] in meters
      * angle - starting angle of the car, degrees
-     * max_steer_angle - maximum angle the wheels turn when steering, degrees
+     * max_steer_angle - maximum angle the tracks turn when steering, degrees
      * max_speed       - maximum speed of the car, km/h
      * power - engine force, in newtons, that is applied to EACH powered wheel
-     * wheels - wheel definitions: [{x, y, rotatable, powered}}, ...] where
+     * tracks - wheel definitions: [{x, y, rotatable, powered}}, ...] where
      * x is wheel position in meters relative to car body center
      * y is wheel position in meters relative to car body center
      * revolving - boolean, does this turn rotate when steering?
@@ -47,8 +58,9 @@ public abstract class Tank implements Vehicle {
      **/
 
     protected static final long COOLDOWN_TIME = 1500;
-    protected TankTurret tankTurret;
-    protected World world;
+
+    private TankTurret tankTurret;
+    private World world;
     protected int accelerate;
     protected int steer;
     protected int bullet;
@@ -59,17 +71,20 @@ public abstract class Tank implements Vehicle {
     private float angle;
     private float power;
     private float speed;
-    private float steerAngle;
-    private float wheelAngle; // Отслеживать текущий угол колеса относительно автомобиля. При рулевом управлении влево / вправо угол будет уменьшаться / увеличиваться постепенно на 200 мс, чтобы предотвратить резкость.
     private float maxSteerAngle;
     private float maxSpeed;
     private int steerTurret;
-    private Wheel[] wheels;
+    private Track[] tracks;
     private ParticleEffect particleEffect;
     private Body tankBody;
     private float koefRotation;
     private List<Bullet> bulletList = new ArrayList<Bullet>();
-    private int HP;
+    private int hitPoints;
+    private TankStateListener tankStateListener;
+
+    public Tank() {
+
+    }
 
     public Tank(float width, float length, Vector2 position, float angle, float power, float maxSteerAngle, float maxSpeed, World world, int koefRotation) {
         if (koefRotation == 0 || koefRotation > power)
@@ -82,21 +97,24 @@ public abstract class Tank implements Vehicle {
         this.power = power;
         this.maxSteerAngle = maxSteerAngle;
         this.maxSpeed = maxSpeed;
-        this.wheels = new Wheel[2];
+        this.tracks = new Track[2];
         this.koefRotation = koefRotation;
 
         // state of car control
         this.steer = STEER_NONE;
         this.accelerate = ACC_NONE;
-        this.wheelAngle = 0;
 
         this.world = world;
         this.bulletList = new ArrayList<Bullet>();
-        this.HP = 1000;
+        this.hitPoints = 1000;
 
         initCarBody();
         initWheels();
         initTankTower();
+    }
+
+    public void setTankStateListener(TankStateListener listener) {
+        this.tankStateListener = listener;
     }
 
     @Override
@@ -133,27 +151,30 @@ public abstract class Tank implements Vehicle {
         tankBody.createFixture(fixtureDef);
         tankBody.setUserData(this);
 
-//        Turret bodyTurret = new Turret();
+//        MassData massData = new MassData();
+//        massData.mass = 1;
+//        massData.center.set(tankBody.getLocalCenter());
+//        tankBody.setMassData(massData);
     }
 
     private void initWheels() {
-        wheels[0] = new Wheel(1, 1.2f, 0.4f, length, false, true, this, world);
-        wheels[1] = new Wheel(-1, 1.2f, 0.4f, length, false, true, this, world);
+        tracks[0] = new Track(1, 1.2f, 0.4f, length, false, true, this, world);
+        tracks[1] = new Track(-1, 1.2f, 0.4f, length, false, true, this, world);
     }
 
     public void initTankTower() {
         tankTurret = new PlayerTankTurret(new Vector2(1, 2f), this, world, new Vector2(0, 1f));
     }
 
-    protected Wheel[] getPoweredWheels() {
-        Array<Wheel> wheelArray = new Array<Wheel>();
-        for (Wheel wheel : this.wheels) {
-            if (wheel.isPowered()) {
-                wheelArray.add(wheel);
+    protected Track[] getPoweredWheels() {
+        Array<Track> wheelArray = new Array<Track>();
+        for (Track track : this.tracks) {
+            if (track.isPowered()) {
+                wheelArray.add(track);
             }
         }
 
-        Wheel[] arr = new Wheel[wheelArray.size];
+        Track[] arr = new Track[wheelArray.size];
         for (int i = 0; i < wheelArray.size; i++) {
             arr[i] = wheelArray.get(i);
         }
@@ -165,15 +186,15 @@ public abstract class Tank implements Vehicle {
         return tankBody.getLocalVector(tankBody.getLinearVelocityFromLocalPoint(position));
     }
 
-    private Wheel[] getRevolvingWheels() {
-        Array<Wheel> wheelArray = new Array<Wheel>();
-        for (Wheel wheel : this.wheels) {
-            if (wheel.isRevolving()) {
-                wheelArray.add(wheel);
+    private Track[] getRevolvingWheels() {
+        Array<Track> wheelArray = new Array<Track>();
+        for (Track track : this.tracks) {
+            if (track.isRevolving()) {
+                wheelArray.add(track);
             }
         }
 
-        Wheel[] arr = new Wheel[wheelArray.size];
+        Track[] arr = new Track[wheelArray.size];
         for (int i = 0; i < wheelArray.size; i++) {
             arr[i] = wheelArray.get(i);
         }
@@ -198,20 +219,42 @@ public abstract class Tank implements Vehicle {
     public void destroy() {
         world.destroyBody(tankBody);
         world.destroyBody(tankTurret.getTurretBody());
-        world.destroyBody(wheels[0].getWheelBody());
-        world.destroyBody(wheels[1].getWheelBody());
-        wheels[0] = null;
-        wheels[1] = null;
+        world.destroyBody(tracks[0].getWheelBody());
+        world.destroyBody(tracks[1].getWheelBody());
+        tracks[0] = null;
+        tracks[1] = null;
         tankTurret = null;
     }
 
     public void update(float delta) {
         handleInput();
 
+        if (hitPoints <= 0) {
+            getBody().setActive(false);
+
+            Assets.sExplosionEffect.reset();
+            Assets.sExplosionEffect.setPosition(getPositionX(), getPositionY());
+            destroy();
+
+            if (tankStateListener != null) tankStateListener.destroyTank(this);
+            return;
+        }
+
+        if (bulletList.size() > 0) {
+            for (int i = 0; i < bulletList.size(); i++) {
+                bulletList.get(i).update(delta);
+                if (bulletList.get(i).isDestroy()) {
+                    if (tankStateListener != null) tankStateListener.destroyBullet(bulletList.get(i).getBody().getPosition());
+                    bulletList.get(i).getBody().setActive(false);
+                    world.destroyBody(bulletList.get(i).getBody());
+                    bulletList.remove(i);
+                }
+            }
+        }
         //1. KILL SIDEWAYS VELOCITY
-        // kill sideways velocity for all wheels
-        for (Wheel wheel : wheels) {
-            wheel.killSidewaysVelocity();
+        // kill sideways velocity for all tracks
+        for (Track track : tracks) {
+            track.killSidewaysVelocity();
         }
 
         //3. APPLY FORCE TO WHEELS
@@ -255,21 +298,21 @@ public abstract class Tank implements Vehicle {
         }
 
         if (leftBaseVector != null) {
-            Wheel w = getPoweredWheels()[0];
+            Track w = getPoweredWheels()[0];
             Vector2 position = w.getWheelBody().getWorldCenter();
             getPoweredWheels()[0].getWheelBody().applyForce(w.getWheelBody().getWorldVector(leftBaseVector), position, true);
         } else {
-            Wheel w = getPoweredWheels()[0];
+            Track w = getPoweredWheels()[0];
             Vector2 position = w.getWheelBody().getWorldCenter();
             w.getWheelBody().applyForce(w.getWheelBody().getWorldVector(forceVector), position, true);
         }
 
         if (rightBaseVector != null) {
-            Wheel w = getPoweredWheels()[1];
+            Track w = getPoweredWheels()[1];
             Vector2 position = w.getWheelBody().getWorldCenter();
             w.getWheelBody().applyForce(w.getWheelBody().getWorldVector(rightBaseVector), position, true);
         } else {
-            Wheel w = getPoweredWheels()[1];
+            Track w = getPoweredWheels()[1];
             Vector2 position = w.getWheelBody().getWorldCenter();
             w.getWheelBody().applyForce(w.getWheelBody().getWorldVector(forceVector), position, true);
         }
@@ -285,17 +328,6 @@ public abstract class Tank implements Vehicle {
             if (bullet == BULLET_EXIST && System.currentTimeMillis() - shootTime >= COOLDOWN_TIME) {
                 bulletList.add(new Bullet(world, tankTurret, OptionsBullet.getBullet(OptionsBullet.Type.YBR_365)));
                 shootTime = System.currentTimeMillis();
-            }
-        }
-
-        if (bulletList.size() > 0) {
-            for (int i = 0; i < bulletList.size(); i++) {
-                bulletList.get(i).update(delta);
-                if (bulletList.get(i).isDestroy()) {
-                    bulletList.get(i).getBody().setActive(false);
-                    world.destroyBody(bulletList.get(i).getBody());
-                    bulletList.remove(i);
-                }
             }
         }
     }
@@ -317,11 +349,83 @@ public abstract class Tank implements Vehicle {
         return tankBody;
     }
 
-    public int getHP() {
-        return HP;
+    public int getHitPoints() {
+        return hitPoints;
     }
 
-    public void minHP(int hp) {
-        HP -= hp;
+    public void takeDamage(int damage) {
+        hitPoints -= damage;
+    }
+
+    public float getWidth() {
+        return width;
+    }
+
+    public void setWidth(float width) {
+        this.width = width;
+    }
+
+    public float getLength() {
+        return length;
+    }
+
+    public void setLength(float length) {
+        this.length = length;
+    }
+
+    public Vector2 getPosition() {
+        return position;
+    }
+
+    public void setPosition(Vector2 position) {
+        this.position = position;
+    }
+
+    public float getAngle() {
+        return angle;
+    }
+
+    public void setAngle(float angle) {
+        this.angle = angle;
+    }
+
+    public float getPower() {
+        return power;
+    }
+
+    public void setPower(float power) {
+        this.power = power;
+    }
+
+    public float getSpeed() {
+        return speed;
+    }
+
+    public float getMaxSteerAngle() {
+        return maxSteerAngle;
+    }
+
+    public void setMaxSteerAngle(float maxSteerAngle) {
+        this.maxSteerAngle = maxSteerAngle;
+    }
+
+    public void setMaxSpeed(float maxSpeed) {
+        this.maxSpeed = maxSpeed;
+    }
+
+    public World getWorld() {
+        return world;
+    }
+
+    public void setWorld(World world) {
+        this.world = world;
+    }
+
+    public TankTurret getTankTurret() {
+        return tankTurret;
+    }
+
+    public void setTankTurret(TankTurret turret) {
+        this.tankTurret = turret;
     }
 }

@@ -13,7 +13,7 @@ import com.badlogic.gdx.physics.box2d.joints.RevoluteJointDef;
  * Created by dpuzikov on 21.06.17.
  */
 
-class Wheel {
+public class Track {
 
     /*
         wheel object
@@ -35,11 +35,11 @@ class Wheel {
     private float length;
     private boolean revolving;  // вращающееся, поворотное
     private boolean powered;    // ведущее
-    private Vehicle vehicle;
+    private ru.kizup.minibox2dgame.model.tank.Vehicle vehicle;
     private Body wheelBody;
     private World world;
 
-    Wheel(float x, float y, float width, float length, boolean revolving, boolean powered, Vehicle vehicle, World world) {
+    public Track(float x, float y, float width, float length, boolean revolving, boolean powered, ru.kizup.minibox2dgame.model.tank.Vehicle vehicle, World world) {
         this.x = x;
         this.y = y;
         this.width = width;

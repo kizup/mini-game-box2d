@@ -1,4 +1,4 @@
-package ru.kizup.minibox2dgame.model;
+package ru.kizup.minibox2dgame.model.tank;
 
 import com.badlogic.gdx.physics.box2d.Body;
 

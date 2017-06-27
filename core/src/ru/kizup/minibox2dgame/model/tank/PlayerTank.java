@@ -1,24 +1,20 @@
-package ru.kizup.minibox2dgame.model;
+package ru.kizup.minibox2dgame.model.tank;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.World;
 
-import static ru.kizup.minibox2dgame.screen.GameScreen.ACC_ACCELERATE;
-import static ru.kizup.minibox2dgame.screen.GameScreen.ACC_BRAKE;
-import static ru.kizup.minibox2dgame.screen.GameScreen.ACC_NONE;
 import static ru.kizup.minibox2dgame.screen.GameScreen.BULLET_EXIST;
 import static ru.kizup.minibox2dgame.screen.GameScreen.BULLET_NONE;
-import static ru.kizup.minibox2dgame.screen.GameScreen.STEER_LEFT;
-import static ru.kizup.minibox2dgame.screen.GameScreen.STEER_NONE;
-import static ru.kizup.minibox2dgame.screen.GameScreen.STEER_RIGHT;
 
 /**
  * Created by Neuron on 23.06.2017.
  */
 
-public class PlayerTank extends Tank{
+public class PlayerTank extends Tank {
+
+    public PlayerTank() {}
 
     public PlayerTank(float width, float length, Vector2 position, float angle, float power, float maxSteerAngle, float maxSpeed, World world) {
         super(width, length, position, angle, power, maxSteerAngle, maxSpeed, world, 4);
@@ -53,7 +49,7 @@ public class PlayerTank extends Tank{
 
         if (Gdx.input.isKeyJustPressed(Input.Keys.CONTROL_LEFT)) {
             bullet = BULLET_EXIST;
-        }else{
+        } else {
             bullet = BULLET_NONE;
         }
     }

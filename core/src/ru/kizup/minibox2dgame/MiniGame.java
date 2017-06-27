@@ -6,6 +6,7 @@ import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import ru.kizup.minibox2dgame.controller.Assets;
 import ru.kizup.minibox2dgame.screen.GameScreen;
 import ru.kizup.minibox2dgame.screen.MainUIScreen;
+import ru.kizup.minibox2dgame.screen.NewScreen;
 
 public class MiniGame  extends Game {
     public final static float PIXELS_TO_METERS = 15f;
@@ -15,7 +16,12 @@ public class MiniGame  extends Game {
     @Override
     public void create () {
         batch = new SpriteBatch();
-        startMainMenu();
+//        startMainMenu();
+        startNewScreen();
+    }
+
+    public void startNewScreen() {
+        setScreen(new NewScreen(this));
     }
 
     public void startGame(){

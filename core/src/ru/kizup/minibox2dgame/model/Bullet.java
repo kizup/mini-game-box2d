@@ -5,7 +5,6 @@ import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.Body;
 import com.badlogic.gdx.physics.box2d.BodyDef;
-import com.badlogic.gdx.physics.box2d.CircleShape;
 import com.badlogic.gdx.physics.box2d.FixtureDef;
 import com.badlogic.gdx.physics.box2d.World;
 
@@ -18,38 +17,34 @@ import ru.kizup.minibox2dgame.util.BodyEditorLoader;
 public class Bullet {
 
     private Body body;
-    private TankTurret turret;
+    private ru.kizup.minibox2dgame.model.turret.TankTurret turret;
     private World world;
     private OptionsBullet optionsBullet;
 
     private boolean isDestroy = false;
 
-    public Bullet(final World world, TankTurret turret, OptionsBullet optionsBullet) {
+    public Bullet(final World world, ru.kizup.minibox2dgame.model.turret.TankTurret turret, OptionsBullet optionsBullet) {
         this.turret = turret;
         this.world = world;
         this.optionsBullet = optionsBullet;
 
         initBullet();
-//        bodyTurret.getTurretBody().getFixtureList().get(0).getShape().getRadius()
-//        body.applyForce((float) (1 * Math.sin(vehicle.getBody().getAngle())), (float) (1500 * -Math.cos(vehicle.getBody().getAngle())), ((Tank) vehicle).getPositionX(), ((Tank) vehicle).getPositionX(), true);
-//        body.setLinearVelocity((float) (100 * Math.sin(body.getTurretBody().getAngle() + Math.toRadians(-90))), (float) (100 * Math.cos(bodyTurret.getTurretBody().getAngle() + Math.toRadians(-90))));
     }
 
-    private void initBullet(){
+    private void initBullet() {
         BodyEditorLoader loader = new BodyEditorLoader(Gdx.files.internal(optionsBullet.getPathTexture()));
 
+        Vector2 localPoint = new Vector2(turret.getWidthTurret() - turret.getWidthTurret() / 4,
+                turret.getHeightTurret() / 11);
+
         final BodyDef bodyDef = new BodyDef();
-        bodyDef.position.set(turret.getTurretBody().getWorldPoint(new Vector2(turret.widthTurret - turret.widthTurret / 4 , turret.heightTurret / 11)));
+        bodyDef.position.set(turret.getTurretBody().getWorldPoint(localPoint));
         bodyDef.bullet = true;
         bodyDef.angle = (float) (turret.getTurretBody().getAngle() + Math.toRadians(-90));
         bodyDef.type = BodyDef.BodyType.DynamicBody;
 
         body = world.createBody(bodyDef);
-//        CircleShape circleShape = new CircleShape();
-//        circleShape.setRadius(0.2f);
-
         FixtureDef fixtureDef = new FixtureDef();
-//        fixtureDef.shape = circleShape;
         fixtureDef.restitution = 0f;
         fixtureDef.filter.maskBits = ru.kizup.minibox2dgame.controller.CollisionCategory.MASK_BULLET;
         fixtureDef.filter.categoryBits = ru.kizup.minibox2dgame.controller.CollisionCategory.CATEGORY_BULLET;
@@ -69,21 +64,20 @@ public class Bullet {
 
     }
 
-    public void destroy(){
+    public void destroy() {
+        body.setUserData(null);
         isDestroy = true;
-//        body.setActive(false);
-//        world.destroyBody(body);
     }
 
-    public boolean isDestroy(){
+    public boolean isDestroy() {
         return isDestroy;
     }
 
-    public Body getBody(){
+    public Body getBody() {
         return body;
     }
 
-    public int getDamage(){
+    public int getDamage() {
         return optionsBullet.getDamage();
     }
 }

@@ -1,4 +1,4 @@
-package ru.kizup.minibox2dgame.model;
+package ru.kizup.minibox2dgame.model.turret;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.math.Vector2;
@@ -11,6 +11,7 @@ import com.badlogic.gdx.physics.box2d.joints.RevoluteJointDef;
 import java.util.ArrayList;
 import java.util.List;
 
+import ru.kizup.minibox2dgame.model.tank.Vehicle;
 import ru.kizup.minibox2dgame.util.BodyEditorLoader;
 
 /**
@@ -18,6 +19,11 @@ import ru.kizup.minibox2dgame.util.BodyEditorLoader;
  */
 
 public abstract class TankTurret {
+
+    static final int STEER_NONE = 0;
+    static final int STEER_RIGHT = 1;
+    static final int STEER_LEFT = 2;
+
     /*
         wheel object
 
@@ -35,19 +41,16 @@ public abstract class TankTurret {
     public final float SPEED_ROTATION = 0.1f;
 
     private final float BOTTLE_WIDTH = 4f;
-
-    private Vector2 position;
-    private World world;
-    private Vector2 margin;
-
-    protected float heightTurret;
-    protected float widthTurret;
-
-    protected float tankPrevRotation;
+    private float heightTurret;
+    private float widthTurret;
+    private float tankPrevRotation;
     protected Vehicle vehicle;
     protected Body bodyTurret;
     protected int steer;
     protected float rotationCoeff;
+    private Vector2 position;
+    private World world;
+    private Vector2 margin;
 
     TankTurret(Vector2 position, Vehicle vehicle, World world, Vector2 margin) {
         this.position = position;
@@ -76,32 +79,21 @@ public abstract class TankTurret {
         loader.attachFixture(bodyTurret, "TankTurret", fixtureDef, BOTTLE_WIDTH);
 
         //create joint to connect tankTower to body
-        RevoluteJointDef jointdef=new RevoluteJointDef();
+        RevoluteJointDef jointdef = new RevoluteJointDef();
         jointdef.initialize(vehicle.getBody(), bodyTurret, bodyTurret.getWorldCenter());
-        jointdef.enableMotor=false;
+        jointdef.enableMotor = false;
         jointdef.localAnchorA.set(margin);
 
         world.createJoint(jointdef);
         considerSize(loader);
-
-
-//        float[] vertices = new float[model.vertices.size() * 2];
-//
-//        int j = 0;
-//        for (int i = 0; i < model.vertices.size(); i++) {
-//            vertices[j++] = model.vertices.get(i).x;
-//            vertices[j++] = model.vertices.get(i).y;
-//        }
-//
-//        Polygon polygon = new Polygon(vertices);
     }
-    public void considerSize(BodyEditorLoader loader){
+
+    private void considerSize(BodyEditorLoader loader) {
         List<BodyEditorLoader.PolygonModel> polygons = loader.getInternalModel().rigidBodies.get("TankTurret").polygons;
-//        BodyEditorLoader.PolygonModel model = polygons.get(polygons.size() - 1);
 
         ArrayList<Float> points = new ArrayList<Float>();
-        for(BodyEditorLoader.PolygonModel polygon : polygons){
-            for(Vector2 vector2 : polygon.vertices){
+        for (BodyEditorLoader.PolygonModel polygon : polygons) {
+            for (Vector2 vector2 : polygon.vertices) {
                 points.add(vector2.x);
                 points.add(vector2.y);
             }
@@ -112,7 +104,7 @@ public abstract class TankTurret {
         float minY = Float.MAX_VALUE;
         float maxY = -Float.MAX_VALUE;
 
-        for(int i = 0; i < points.size() - 1; i += 2) {
+        for (int i = 0; i < points.size() - 1; i += 2) {
             float x = points.get(i);
             float y = points.get(i + 1);
             minX = Math.min(minX, x);
@@ -128,7 +120,7 @@ public abstract class TankTurret {
         widthTurret = v.x;
     }
 
-    public void update(){
+    public void update() {
         //Empty
     }
 
@@ -180,5 +172,29 @@ public abstract class TankTurret {
 
     public void setTurretBody(Body wheelBody) {
         this.bodyTurret = wheelBody;
+    }
+
+    public float getHeightTurret() {
+        return heightTurret;
+    }
+
+    public void setHeightTurret(float heightTurret) {
+        this.heightTurret = heightTurret;
+    }
+
+    public float getWidthTurret() {
+        return widthTurret;
+    }
+
+    public void setWidthTurret(float widthTurret) {
+        this.widthTurret = widthTurret;
+    }
+
+    public float getTankPrevRotation() {
+        return tankPrevRotation;
+    }
+
+    public void setTankPrevRotation(float tankPrevRotation) {
+        this.tankPrevRotation = tankPrevRotation;
     }
 }
