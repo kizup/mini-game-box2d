@@ -3,7 +3,7 @@ package ru.kizup.minibox2dgame;
 import com.badlogic.gdx.Game;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 
-import ru.kizup.minibox2dgame.controller.Assets;
+import ru.kizup.minibox2dgame.model.Assets;
 import ru.kizup.minibox2dgame.screen.GameScreen;
 import ru.kizup.minibox2dgame.screen.MainUIScreen;
 import ru.kizup.minibox2dgame.screen.NewScreen;

@@ -8,9 +8,10 @@ import com.badlogic.gdx.math.Matrix4;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.World;
 import com.badlogic.gdx.utils.Array;
+import com.badlogic.gdx.utils.Timer;
 
 import ru.kizup.minibox2dgame.MiniGame;
-import ru.kizup.minibox2dgame.model.Border;
+import ru.kizup.minibox2dgame.model.*;
 import ru.kizup.minibox2dgame.model.factory.BordersFactory;
 import ru.kizup.minibox2dgame.model.tank.EnemyTank;
 import ru.kizup.minibox2dgame.model.tank.PlayerTank;
@@ -57,7 +58,11 @@ public class GameController {
         EnemyTank tank = new EnemyTank(2, 4, new Vector2(x, y), 0, 200, 5, 40, world, player);
         tank.setTankStateListener(new TankStateListener() {
             @Override
-            public void destroyBullet(Vector2 position) {}
+            public void destroyBullet(Vector2 position) {
+                Assets.sSmallExplosionEffect.reset();
+                Assets.sSmallExplosionEffect.setPosition(position.x * MiniGame.PIXELS_TO_METERS,
+                        position.y * MiniGame.PIXELS_TO_METERS);
+            }
 
             @Override
             public void destroyTank(Tank tank) {
@@ -69,7 +74,7 @@ public class GameController {
     }
 
     private void initPlayer() {
-        player = new PlayerTank(2, 4, new Vector2(10, 10), 0, 40, 5, 40, world);
+        player = new PlayerTank(2, 4, new Vector2(10, 10), 0, 60, 5, 40, world);
         player.setTankStateListener(new TankStateListener() {
             @Override
             public void destroyBullet(Vector2 position) {
@@ -79,8 +84,26 @@ public class GameController {
             }
 
             @Override
-            public void destroyTank(Tank tank) {}
+            public void destroyTank(Tank tank) {
+                player = null;
+                for (int i = 0; i < enemies.size; i++) {
+                    enemies.get(i).clearTarget();
+                }
+
+                Timer.schedule(new Timer.Task() {
+                    @Override
+                    public void run() {
+                        initPlayer();
+                    }
+                }, 3);
+            }
         });
+
+        if (enemies.size > 0) {
+            for (int i = 0; i < enemies.size; i++) {
+                enemies.get(i).setTargetVector(player.getBody().getPosition());
+            }
+        }
     }
 
     private void initBorders() {
@@ -94,29 +117,32 @@ public class GameController {
 
     public void update(float delta) {
         // Updating player tank
-        player.update(delta);
+        if (player != null) player.update(delta);
 
         // Updating enemy tanks
         for (int i = 0; i < enemies.size; i++) {
             enemies.get(i).update(delta);
         }
 
-        // Updating camera
+        // Updating camera if player is alive
         camera.update();
-        Vector2 cameraTarget = new Vector2(player.getPositionX(), player.getPositionY());
-        if (cameraTarget.y - (camera.viewportHeight / 2) <= 0) {
-            cameraTarget.set(cameraTarget.x, camera.viewportHeight / 2);
+
+        if (player != null) {
+            Vector2 cameraTarget = new Vector2(player.getPositionX(), player.getPositionY());
+            if (cameraTarget.y - (camera.viewportHeight / 2) <= 0) {
+                cameraTarget.set(cameraTarget.x, camera.viewportHeight / 2);
+            }
+            if (cameraTarget.y + (camera.viewportHeight / 2) >= (PIXELS_TO_METERS * heightInMeters)) {
+                cameraTarget.set(cameraTarget.x, (PIXELS_TO_METERS * heightInMeters) - (camera.viewportHeight / 2));
+            }
+            if (cameraTarget.x - (camera.viewportWidth / 2) <= 0) {
+                cameraTarget.set(camera.viewportWidth / 2, cameraTarget.y);
+            }
+            if (cameraTarget.x + (camera.viewportWidth / 2) >= (PIXELS_TO_METERS * widthInMeters)) {
+                cameraTarget.set((PIXELS_TO_METERS * widthInMeters) - (camera.viewportWidth / 2), cameraTarget.y);
+            }
+            camera.position.set(cameraTarget, 0);
         }
-        if (cameraTarget.y + (camera.viewportHeight / 2) >= (PIXELS_TO_METERS * heightInMeters)) {
-            cameraTarget.set(cameraTarget.x, (PIXELS_TO_METERS * heightInMeters) - (camera.viewportHeight / 2));
-        }
-        if (cameraTarget.x - (camera.viewportWidth / 2) <= 0) {
-            cameraTarget.set(camera.viewportWidth / 2, cameraTarget.y);
-        }
-        if (cameraTarget.x + (camera.viewportWidth / 2) >= (PIXELS_TO_METERS * widthInMeters)) {
-            cameraTarget.set((PIXELS_TO_METERS * widthInMeters) - (camera.viewportWidth / 2), cameraTarget.y);
-        }
-        camera.position.set(cameraTarget, 0);
 
         // Updating particle effects
         Assets.sExplosionEffect.update(delta);
@@ -140,10 +166,11 @@ public class GameController {
     }
 
     public float getPlayerSpeed() {
+        if (player == null) return 0;
         return (float) player.getSpeedKmH();
     }
 
     public float getPlayerMaxSpeed() {
-        return player.getMaxSpeed();
+        return player == null ? 0 : player.getMaxSpeed();
     }
 }

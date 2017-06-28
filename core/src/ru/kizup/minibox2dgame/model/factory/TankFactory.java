@@ -4,6 +4,7 @@ import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.World;
 
 import ru.kizup.minibox2dgame.model.tank.EnemyTank;
+import ru.kizup.minibox2dgame.model.tank.PlayerTank;
 import ru.kizup.minibox2dgame.model.tank.Tank;
 
 /**
@@ -21,7 +22,7 @@ public final class TankFactory extends BaseFactory {
 
     public TankFactory(boolean enemy) {
         if (enemy) tank = new EnemyTank();
-        else tank = new ru.kizup.minibox2dgame.model.tank.PlayerTank();
+        else tank = new PlayerTank();
     }
 
     public TankFactory width(float width) {

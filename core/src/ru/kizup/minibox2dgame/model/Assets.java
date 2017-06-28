@@ -1,4 +1,4 @@
-package ru.kizup.minibox2dgame.controller;
+package ru.kizup.minibox2dgame.model;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Texture;

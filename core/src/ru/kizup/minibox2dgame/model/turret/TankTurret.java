@@ -197,4 +197,9 @@ public abstract class TankTurret {
     public void setTankPrevRotation(float tankPrevRotation) {
         this.tankPrevRotation = tankPrevRotation;
     }
+
+    public Vehicle getVehicle() {
+        return vehicle;
+    }
+
 }

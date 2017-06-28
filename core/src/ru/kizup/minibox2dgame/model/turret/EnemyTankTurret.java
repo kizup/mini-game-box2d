@@ -11,7 +11,7 @@ import ru.kizup.minibox2dgame.util.Util;
  * Created by Neuron on 23.06.2017.
  */
 
-public class EnemyTankTurret extends TankTurret{
+public class EnemyTankTurret extends TankTurret {
 
     private Vector2 targetVector;
 
@@ -29,7 +29,9 @@ public class EnemyTankTurret extends TankTurret{
     }
 
     //Находим разницу между углами и находим наименьшее расстояние на замкнутой прямой (0,360)
-    private float getAngleRotationToTarget(){
+    private float getAngleRotationToTarget() {
+        if (targetVector == null) return 0;
+
         float delta = Gdx.graphics.getDeltaTime();
         float angle = (float) Math.atan2(targetVector.y - bodyTurret.getPosition().y, targetVector.x - bodyTurret.getPosition().x);
 
@@ -37,9 +39,9 @@ public class EnemyTankTurret extends TankTurret{
         float angleTurret = bodyTurret.getAngle() < 0 ? (float) (bodyTurret.getAngle() + Math.toRadians(360)) : bodyTurret.getAngle();
 
         float speedRotation;
-        if(Math.abs(angleTurret - angleBetween) < 0.1) //  0.1 - возможнная разница углов, для устранения частого обновления
+        if (Math.abs(angleTurret - angleBetween) < 0.01) //  0.1 - возможнная разница углов, для устранения частого обновления
             speedRotation = 0;
-        else if (angleBetween >= angleTurret){
+        else if (angleBetween >= angleTurret) {
             // Умножение на delta для плавности вращения башни, скорость регулируется параметром rotationCoeff
             speedRotation = angleBetween - angleTurret > (angleTurret + Math.toRadians(360) - angleBetween)
                     ? -rotationCoeff * SPEED_ROTATION * delta
@@ -54,7 +56,7 @@ public class EnemyTankTurret extends TankTurret{
         return speedRotation;
     }
 
-    public void setTargetVector(Vector2 targetVector){
+    public void setTargetVector(Vector2 targetVector) {
         this.targetVector = targetVector;
     }
 }

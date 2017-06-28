@@ -8,6 +8,8 @@ import com.badlogic.gdx.physics.box2d.BodyDef;
 import com.badlogic.gdx.physics.box2d.FixtureDef;
 import com.badlogic.gdx.physics.box2d.World;
 
+import ru.kizup.minibox2dgame.model.tank.Vehicle;
+import ru.kizup.minibox2dgame.model.turret.TankTurret;
 import ru.kizup.minibox2dgame.util.BodyEditorLoader;
 
 /**
@@ -17,13 +19,13 @@ import ru.kizup.minibox2dgame.util.BodyEditorLoader;
 public class Bullet {
 
     private Body body;
-    private ru.kizup.minibox2dgame.model.turret.TankTurret turret;
+    private TankTurret turret;
     private World world;
     private OptionsBullet optionsBullet;
 
     private boolean isDestroy = false;
 
-    public Bullet(final World world, ru.kizup.minibox2dgame.model.turret.TankTurret turret, OptionsBullet optionsBullet) {
+    public Bullet(final World world, TankTurret turret, OptionsBullet optionsBullet) {
         this.turret = turret;
         this.world = world;
         this.optionsBullet = optionsBullet;
@@ -79,5 +81,9 @@ public class Bullet {
 
     public int getDamage() {
         return optionsBullet.getDamage();
+    }
+
+    public Vehicle getOwner() {
+        return turret.getVehicle();
     }
 }

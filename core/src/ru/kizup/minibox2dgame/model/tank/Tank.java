@@ -1,12 +1,10 @@
 package ru.kizup.minibox2dgame.model.tank;
 
-import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.g2d.ParticleEffect;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.Body;
 import com.badlogic.gdx.physics.box2d.BodyDef;
 import com.badlogic.gdx.physics.box2d.FixtureDef;
-import com.badlogic.gdx.physics.box2d.MassData;
 import com.badlogic.gdx.physics.box2d.PolygonShape;
 import com.badlogic.gdx.physics.box2d.World;
 import com.badlogic.gdx.utils.Array;
@@ -15,8 +13,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 import ru.kizup.minibox2dgame.MiniGame;
-import ru.kizup.minibox2dgame.controller.Assets;
 import ru.kizup.minibox2dgame.controller.TankStateListener;
+import ru.kizup.minibox2dgame.model.Assets;
 import ru.kizup.minibox2dgame.model.Bullet;
 import ru.kizup.minibox2dgame.model.OptionsBullet;
 import ru.kizup.minibox2dgame.model.Track;
@@ -57,7 +55,6 @@ public abstract class Tank implements Vehicle {
      * koefRotation - коэффициент поворота танка от 0 до power. 1 - не изменять скорость поворота.
      **/
 
-    protected static final long COOLDOWN_TIME = 1500;
 
     private TankTurret tankTurret;
     private World world;
@@ -65,6 +62,7 @@ public abstract class Tank implements Vehicle {
     protected int steer;
     protected int bullet;
     protected long shootTime;
+    protected long cooldownTime = 1500;
     private float width;
     private float length;
     private Vector2 position;
@@ -152,9 +150,11 @@ public abstract class Tank implements Vehicle {
         tankBody.setUserData(this);
 
 //        MassData massData = new MassData();
-//        massData.mass = 1;
+//        massData.mass = 100;
 //        massData.center.set(tankBody.getLocalCenter());
 //        tankBody.setMassData(massData);
+//
+//        power *= massData.mass;
     }
 
     private void initWheels() {
@@ -325,8 +325,13 @@ public abstract class Tank implements Vehicle {
         }
 
         if (!isEnemy()) {
-            if (bullet == BULLET_EXIST && System.currentTimeMillis() - shootTime >= COOLDOWN_TIME) {
+            if (bullet == BULLET_EXIST && System.currentTimeMillis() - shootTime >= cooldownTime) {
                 bulletList.add(new Bullet(world, tankTurret, OptionsBullet.getBullet(OptionsBullet.Type.YBR_365)));
+                shootTime = System.currentTimeMillis();
+            }
+        } else {
+            if (bullet == BULLET_EXIST && System.currentTimeMillis() - shootTime >= cooldownTime) {
+                bulletList.add(new Bullet(world, tankTurret, OptionsBullet.getBullet(OptionsBullet.Type.YBR_365P)));
                 shootTime = System.currentTimeMillis();
             }
         }

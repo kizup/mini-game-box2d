@@ -15,7 +15,7 @@ public class PlayerTankTurret extends TankTurret {
 
     public PlayerTankTurret(Vector2 position, Vehicle vehicle, World world, Vector2 margin) {
         super(position, vehicle, world, margin);
-        rotationCoeff = 8f;
+        rotationCoeff = 14f;
     }
 
     @Override

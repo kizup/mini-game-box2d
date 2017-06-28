@@ -1,9 +1,13 @@
 package ru.kizup.minibox2dgame.model.tank;
 
+import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.World;
 
 import ru.kizup.minibox2dgame.model.turret.EnemyTankTurret;
+
+import static ru.kizup.minibox2dgame.screen.GameScreen.BULLET_EXIST;
+import static ru.kizup.minibox2dgame.screen.GameScreen.BULLET_NONE;
 
 /**
  * Created by dpuzikov on 21.06.17.
@@ -20,6 +24,9 @@ public class EnemyTank extends Tank {
         super(width, length, position, angle, power, maxSteerAngle, maxSpeed, world, 4);
         this.targetTank = targetTank;
         setTargetVector(targetTank.getBody().getPosition());
+
+        cooldownTime = MathUtils.random(2500, 5500);
+        bullet = BULLET_NONE;
     }
 
     @Override
@@ -41,10 +48,19 @@ public class EnemyTank extends Tank {
         super.update(delta);
         if (getHitPoints() <= 0) return;
 
-        setTargetVector(targetTank.getBody().getPosition());
+        if (targetTank != null) setTargetVector(targetTank.getBody().getPosition());
+
+        if (bullet == BULLET_NONE && System.currentTimeMillis() - shootTime >= cooldownTime) {
+            bullet = BULLET_EXIST;
+        }
     }
 
-    private void setTargetVector(Vector2 targetVector) {
+    public void setTargetVector(Vector2 targetVector) {
         ((EnemyTankTurret) getTankTurret()).setTargetVector(targetVector);
+    }
+
+    public void clearTarget() {
+        targetTank = null;
+        setTargetVector(null);
     }
 }

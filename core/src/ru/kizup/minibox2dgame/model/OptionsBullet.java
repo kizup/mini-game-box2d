@@ -22,7 +22,7 @@ public class OptionsBullet {
 
     public static OptionsBullet getBullet(Type type){
         switch (type){
-            case YBR_365P: return new OptionsBullet(500, 0, 3f, "YBR-365P", "bullet.json");
+            case YBR_365P: return new OptionsBullet(100, 0, 3f, "YBR-365P", "bullet.json");
             case YBR_365: return new OptionsBullet(500, 0, 3f, "YBR-365", "bullet.json");
             case YBR_365K: return new OptionsBullet(500, 0, 3f, "YBR-365K", "bullet.json");
         }
