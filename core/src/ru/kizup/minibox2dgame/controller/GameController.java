@@ -1,17 +1,23 @@
 package ru.kizup.minibox2dgame.controller;
 
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.ai.steer.behaviors.Arrive;
 import com.badlogic.gdx.graphics.FPSLogger;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Matrix4;
 import com.badlogic.gdx.math.Vector2;
+import com.badlogic.gdx.physics.box2d.Body;
+import com.badlogic.gdx.physics.box2d.BodyDef;
+import com.badlogic.gdx.physics.box2d.FixtureDef;
+import com.badlogic.gdx.physics.box2d.PolygonShape;
 import com.badlogic.gdx.physics.box2d.World;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.Timer;
 
 import ru.kizup.minibox2dgame.MiniGame;
 import ru.kizup.minibox2dgame.model.*;
+import ru.kizup.minibox2dgame.model.entity.B2dSteeringEnemy;
 import ru.kizup.minibox2dgame.model.factory.BordersFactory;
 import ru.kizup.minibox2dgame.model.tank.EnemyTank;
 import ru.kizup.minibox2dgame.model.tank.PlayerTank;
@@ -33,6 +39,9 @@ public class GameController {
     private FPSLogger fpsLogger;
     private Array<EnemyTank> enemies = new Array<EnemyTank>();
 
+    private B2dSteeringEnemy entity;
+    private B2dSteeringEnemy target;
+
     public GameController() {
         widthInMeters = Gdx.graphics.getWidth() / PIXELS_TO_METERS * 1.2f;
         heightInMeters = Gdx.graphics.getHeight() / PIXELS_TO_METERS * 1.2f;
@@ -44,6 +53,18 @@ public class GameController {
         initBorders();
         initPlayer();
         initEnemy();
+
+        Body box = createCircle(new Vector2(10, 10));
+//        Body box2 = createCircle(new Vector2(20, 20));
+
+        entity = new B2dSteeringEnemy(box, 5);
+        target = new B2dSteeringEnemy(player.getBody(), 5);
+
+        Arrive<Vector2> vector2Arrive = new Arrive<Vector2>(entity, target)
+                .setTimeToTarget(0.1f)
+                .setArrivalTolerance(2f)
+                .setDecelerationRadius(10);
+        entity.setBehavior(vector2Arrive);
     }
 
     private void initEnemy() {
@@ -106,6 +127,31 @@ public class GameController {
         }
     }
 
+    private Body createCircle(Vector2 position){
+        BodyDef bodyDef = new BodyDef();
+        bodyDef.position.set(position);
+        bodyDef.angle = 4;
+        bodyDef.fixedRotation = false;
+
+        Body boxBody = world.createBody(bodyDef);
+
+        PolygonShape shape = new PolygonShape();
+        shape.setAsBox(3, 3);
+//        shape.setRadius(3);
+        FixtureDef fixtureDef = new FixtureDef();
+        fixtureDef.shape = shape;
+        fixtureDef.restitution = 0.4f;
+        fixtureDef.density = 1.0f;
+
+//        fixtureDef.filter.maskBits = maskBits;
+//        fixtureDef.filter.categoryBits = CollisionCategory.CATEGORY_SCENERY;
+
+        boxBody.createFixture(fixtureDef);
+        boxBody.setUserData(this);
+
+        return boxBody;
+    }
+
     private void initBorders() {
         BordersFactory.getInstance().initFactory(widthInMeters, heightInMeters);
         Array<Border> borders = new Array<Border>();
@@ -116,6 +162,7 @@ public class GameController {
     }
 
     public void update(float delta) {
+
         // Updating player tank
         if (player != null) player.update(delta);
 
@@ -143,6 +190,9 @@ public class GameController {
             }
             camera.position.set(cameraTarget, 0);
         }
+
+        entity.update(delta);
+        target.update(delta);
 
         // Updating particle effects
         Assets.sExplosionEffect.update(delta);

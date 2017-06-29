@@ -26,19 +26,19 @@ public class BordersFactory extends BaseFactory {
     }
 
     public Border createBottomBorder(World world) {
-        return new Border(width, 1, width / 2, 0.5f, world, CollisionCategory.MASK_SCENERY);
+        return new Border(width, 1, width / 2, 0.5f, world, CollisionCategory.MASK_BORDER);
     }
 
     public Border createTopBorder(World world) {
-        return new Border(width, 1, width/ 2, height - 0.5f, world, CollisionCategory.MASK_SCENERY);
+        return new Border(width, 1, width/ 2, height - 0.5f, world, CollisionCategory.MASK_BORDER);
     }
 
     public Border createLeftBorder(World world) {
-        return new Border(1, height, 0.5f, height / 2, world, CollisionCategory.MASK_SCENERY);
+        return new Border(1, height, 0.5f, height / 2, world, CollisionCategory.MASK_BORDER);
     }
 
     public Border createRightBorder(World world) {
-        return new Border(1, height, width - 0.5f, height / 2, world, CollisionCategory.MASK_SCENERY);
+        return new Border(1, height, width - 0.5f, height / 2, world, CollisionCategory.MASK_BORDER);
     }
 
 }

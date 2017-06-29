@@ -50,9 +50,9 @@ public class EnemyTank extends Tank {
 
         if (targetTank != null) setTargetVector(targetTank.getBody().getPosition());
 
-        if (bullet == BULLET_NONE && System.currentTimeMillis() - shootTime >= cooldownTime) {
-            bullet = BULLET_EXIST;
-        }
+//        if (bullet == BULLET_NONE && System.currentTimeMillis() - shootTime >= cooldownTime) {
+//            bullet = BULLET_EXIST;
+//        }
     }
 
     public void setTargetVector(Vector2 targetVector) {
