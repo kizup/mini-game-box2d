@@ -1,5 +1,6 @@
 package ru.kizup.minibox2dgame.model.entity;
 
+import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.ai.steer.Steerable;
 import com.badlogic.gdx.ai.steer.SteeringAcceleration;
 import com.badlogic.gdx.ai.steer.SteeringBehavior;
@@ -31,10 +32,59 @@ public class B2dSteeringEnemy implements Steerable<Vector2>{
     public B2dSteeringEnemy(Body body, float boundingRadius){
         this.body = body;
         this.boundingRadius = boundingRadius;
+
+        this.maxLinearSpeed = 500;
+        this.maxLinearAcceleration = 5000;
+        this.maxAngularSpeed = 30;
+        this.maxAngularAcceleration = 50;
+
+        this.tagged = false;
+
+        this.steeringOutput = new SteeringAcceleration<Vector2>(new Vector2());
+        this.body.setUserData(this);
     }
 
     public void update(float delta){
+        if(behavior != null){
+            behavior.calculateSteering(steeringOutput);
+            applySteering(delta);
+        }
+    }
 
+    private void applySteering(float delta){
+        boolean anyAcceleration = false;
+
+        if(!steeringOutput.linear.isZero()){
+            Vector2 force = steeringOutput.linear.scl(delta);
+            body.applyForceToCenter(force, true);
+            anyAcceleration = true;
+        }
+
+        if(steeringOutput.angular != 0){
+            body.applyTorque(steeringOutput.angular * delta, true);
+            anyAcceleration = true;
+        }else{
+            Vector2 linVel = getLinearVelocity();
+            if(!linVel.isZero()){
+                float newOrientation = vectorToAngle(linVel);
+                body.setAngularVelocity((newOrientation - getAngularVelocity()) * delta);
+                body.setTransform(body.getPosition(), newOrientation);
+            }
+        }
+
+
+        if(anyAcceleration){
+            //Linear Capping
+            Vector2 velocity = body.getLinearVelocity();
+            float currentSpeedSquare = velocity.len2();
+            if(currentSpeedSquare > maxLinearSpeed * maxLinearSpeed){
+                body.setLinearVelocity(velocity.scl(maxAngularSpeed / (float) Math.sqrt(currentSpeedSquare)));
+            }
+            //Linear Capping
+            if(body.getAngularVelocity() > maxAngularSpeed){
+                body.setAngularVelocity(maxAngularSpeed);
+            }
+        }
     }
 
     @Override

@@ -145,7 +145,7 @@ public class GameScreen extends ScreenAdapter {
     private void initEnemyTank() {
         int x = MathUtils.random(5, (int) WIDTH_IN_METERS - 5);
         int y = MathUtils.random(5, (int) HEIGHT_IN_METERS - 5);
-        tankEnemy = new EnemyTank(2, 4, new Vector2(x, y), 0, 20, 5, 40, world, tank);
+        tankEnemy = new EnemyTank(2, 4, new Vector2(x, y), 0, 20, 5, 40, world, tank, 10);
         tankEnemy.setTankStateListener(new TankStateListener() {
             @Override
             public void destroyBullet(Vector2 position) {

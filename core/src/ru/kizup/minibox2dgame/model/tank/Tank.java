@@ -63,6 +63,7 @@ public abstract class Tank implements Vehicle {
     protected int bullet;
     protected long shootTime;
     protected long cooldownTime = 1500;
+    private Body tankBody;
     private float width;
     private float length;
     private Vector2 position;
@@ -74,7 +75,6 @@ public abstract class Tank implements Vehicle {
     private int steerTurret;
     private Track[] tracks;
     private ParticleEffect particleEffect;
-    private Body tankBody;
     private float koefRotation;
     private List<Bullet> bulletList = new ArrayList<Bullet>();
     private int hitPoints;
@@ -320,9 +320,9 @@ public abstract class Tank implements Vehicle {
         tankTurret.update();
 
         // если идти очень медленно, остановитесь - чтобы предотвратить бесконечное скользящее
-        if (getSpeedKmH() < 4 && accelerate == ACC_NONE) {
-            setSpeed(0);
-        }
+//        if (getSpeedKmH() < 4 && accelerate == ACC_NONE) {
+//            setSpeed(0);
+//        }
 
         if (!isEnemy()) {
             if (bullet == BULLET_EXIST && System.currentTimeMillis() - shootTime >= cooldownTime) {

@@ -39,7 +39,6 @@ public class GameController {
     private FPSLogger fpsLogger;
     private Array<EnemyTank> enemies = new Array<EnemyTank>();
 
-    private B2dSteeringEnemy entity;
     private B2dSteeringEnemy target;
 
     public GameController() {
@@ -54,17 +53,19 @@ public class GameController {
         initPlayer();
         initEnemy();
 
-        Body box = createCircle(new Vector2(10, 10));
+//        Body box = createCircle(new Vector2(20, 20));
 //        Body box2 = createCircle(new Vector2(20, 20));
 
-        entity = new B2dSteeringEnemy(box, 5);
-        target = new B2dSteeringEnemy(player.getBody(), 5);
+//        entity = new B2dSteeringEnemy(box, 10);
 
-        Arrive<Vector2> vector2Arrive = new Arrive<Vector2>(entity, target)
-                .setTimeToTarget(0.1f)
-                .setArrivalTolerance(2f)
-                .setDecelerationRadius(10);
-        entity.setBehavior(vector2Arrive);
+        target = new B2dSteeringEnemy(player.getBody(), 10);
+
+        for(EnemyTank enemyTank : enemies) {
+            Arrive<Vector2> vector2Arrive = new Arrive<Vector2>(enemyTank, target)
+                    .setArrivalTolerance(15f)
+                    .setDecelerationRadius(10);
+            enemyTank.setBehavior(vector2Arrive);
+        }
     }
 
     private void initEnemy() {
@@ -76,7 +77,7 @@ public class GameController {
     private EnemyTank generateEnemy() {
         int x = MathUtils.random(5, (int) widthInMeters - 5);
         int y = MathUtils.random(5, (int) heightInMeters - 5);
-        EnemyTank tank = new EnemyTank(2, 4, new Vector2(x, y), 0, 200, 5, 40, world, player);
+        EnemyTank tank = new EnemyTank(2, 4, new Vector2(x, y), 0, 200, 5, 40, world, player, 5);
         tank.setTankStateListener(new TankStateListener() {
             @Override
             public void destroyBullet(Vector2 position) {
@@ -130,8 +131,10 @@ public class GameController {
     private Body createCircle(Vector2 position){
         BodyDef bodyDef = new BodyDef();
         bodyDef.position.set(position);
-        bodyDef.angle = 4;
+        bodyDef.type = BodyDef.BodyType.DynamicBody;
+        bodyDef.angle = 0;
         bodyDef.fixedRotation = false;
+        bodyDef.bullet = false;
 
         Body boxBody = world.createBody(bodyDef);
 
@@ -191,7 +194,6 @@ public class GameController {
             camera.position.set(cameraTarget, 0);
         }
 
-        entity.update(delta);
         target.update(delta);
 
         // Updating particle effects
