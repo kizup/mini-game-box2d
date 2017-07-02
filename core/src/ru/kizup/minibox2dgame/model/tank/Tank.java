@@ -320,9 +320,9 @@ public abstract class Tank implements Vehicle {
         tankTurret.update();
 
         // если идти очень медленно, остановитесь - чтобы предотвратить бесконечное скользящее
-//        if (getSpeedKmH() < 4 && accelerate == ACC_NONE) {
+        if (getSpeedKmH() < 4 && accelerate == ACC_NONE) {
 //            setSpeed(0);
-//        }
+        }
 
         if (!isEnemy()) {
             if (bullet == BULLET_EXIST && System.currentTimeMillis() - shootTime >= cooldownTime) {

@@ -2,6 +2,7 @@ package ru.kizup.minibox2dgame.controller;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.ai.steer.behaviors.Arrive;
+import com.badlogic.gdx.ai.steer.behaviors.CollisionAvoidance;
 import com.badlogic.gdx.graphics.FPSLogger;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.math.MathUtils;
@@ -38,6 +39,7 @@ public class GameController {
     private PlayerTank player;
     private FPSLogger fpsLogger;
     private Array<EnemyTank> enemies = new Array<EnemyTank>();
+    private Array<BoxProp> boxProps;
 
     private B2dSteeringEnemy target;
 
@@ -53,10 +55,11 @@ public class GameController {
         initPlayer();
         initEnemy();
 
-//        Body box = createCircle(new Vector2(20, 20));
-//        Body box2 = createCircle(new Vector2(20, 20));
-
-//        entity = new B2dSteeringEnemy(box, 10);
+        boxProps = new Array<BoxProp>();
+        Vector2 center = new Vector2(widthInMeters / 2, heightInMeters / 2);
+        boxProps.add(new BoxProp(3, 3, center.x - 10, center.y, world, CollisionCategory.MASK_SCENERY));
+        boxProps.add(new BoxProp(6, 6, center.x + 3, center.y, world, CollisionCategory.MASK_SCENERY));
+        boxProps.add(new BoxProp(1, 1, center.x + 2, center.y + 10f, world, CollisionCategory.MASK_SCENERY));
 
         target = new B2dSteeringEnemy(player.getBody(), 10);
 
@@ -65,6 +68,13 @@ public class GameController {
                     .setArrivalTolerance(15f)
                     .setDecelerationRadius(10);
             enemyTank.setBehavior(vector2Arrive);
+
+//            for(int i = 0; i < enemies.size - 1; i++) {
+//                if(enemies.get(i) != enemyTank) {
+//                    CollisionAvoidance<Vector2> vector2CollisionAvoidance = new CollisionAvoidance<Vector2>(enemyTank, enemies.get(i));
+//                    enemyTank.setBehaviorAvoidanceCollision(vector2CollisionAvoidance);
+//                }
+//            }
         }
     }
 
@@ -77,6 +87,7 @@ public class GameController {
     private EnemyTank generateEnemy() {
         int x = MathUtils.random(5, (int) widthInMeters - 5);
         int y = MathUtils.random(5, (int) heightInMeters - 5);
+
         EnemyTank tank = new EnemyTank(2, 4, new Vector2(x, y), 0, 200, 5, 40, world, player, 5);
         tank.setTankStateListener(new TankStateListener() {
             @Override
@@ -126,33 +137,6 @@ public class GameController {
                 enemies.get(i).setTargetVector(player.getBody().getPosition());
             }
         }
-    }
-
-    private Body createCircle(Vector2 position){
-        BodyDef bodyDef = new BodyDef();
-        bodyDef.position.set(position);
-        bodyDef.type = BodyDef.BodyType.DynamicBody;
-        bodyDef.angle = 0;
-        bodyDef.fixedRotation = false;
-        bodyDef.bullet = false;
-
-        Body boxBody = world.createBody(bodyDef);
-
-        PolygonShape shape = new PolygonShape();
-        shape.setAsBox(3, 3);
-//        shape.setRadius(3);
-        FixtureDef fixtureDef = new FixtureDef();
-        fixtureDef.shape = shape;
-        fixtureDef.restitution = 0.4f;
-        fixtureDef.density = 1.0f;
-
-//        fixtureDef.filter.maskBits = maskBits;
-//        fixtureDef.filter.categoryBits = CollisionCategory.CATEGORY_SCENERY;
-
-        boxBody.createFixture(fixtureDef);
-        boxBody.setUserData(this);
-
-        return boxBody;
     }
 
     private void initBorders() {

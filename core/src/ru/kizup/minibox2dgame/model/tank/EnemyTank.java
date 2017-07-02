@@ -1,27 +1,25 @@
 package ru.kizup.minibox2dgame.model.tank;
 
-import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.Input;
+import com.badlogic.gdx.ai.steer.Proximity;
 import com.badlogic.gdx.ai.steer.Steerable;
 import com.badlogic.gdx.ai.steer.SteeringAcceleration;
 import com.badlogic.gdx.ai.steer.SteeringBehavior;
 import com.badlogic.gdx.ai.utils.Location;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Vector2;
-import com.badlogic.gdx.physics.box2d.Body;
 import com.badlogic.gdx.physics.box2d.World;
 
 import ru.kizup.minibox2dgame.model.turret.EnemyTankTurret;
 import ru.kizup.minibox2dgame.util.SteeringUtils;
+import ru.kizup.minibox2dgame.util.Util;
 
-import static ru.kizup.minibox2dgame.screen.GameScreen.BULLET_EXIST;
 import static ru.kizup.minibox2dgame.screen.GameScreen.BULLET_NONE;
 
 /**
  * Created by dpuzikov on 21.06.17.
  */
 
-public class EnemyTank extends Tank implements Steerable<Vector2> {
+public class EnemyTank extends Tank implements Steerable<Vector2>, Proximity<Vector2> {
 
     private static final String TAG = "EnemyTank";
 
@@ -35,6 +33,7 @@ public class EnemyTank extends Tank implements Steerable<Vector2> {
     private float orientation;
     private float maxAngularSpeed;
     private float maxLinearAcceleration;
+    private Steerable<Vector2> owner;
 
     private SteeringBehavior<Vector2> behavior;
     private SteeringAcceleration<Vector2> steeringOutput;
@@ -95,52 +94,33 @@ public class EnemyTank extends Tank implements Steerable<Vector2> {
     }
 
     private void applySteering(float delta){
+//        if(!steeringOutput.linear.isZero()){
+//            Vector2 force = steeringOutput.linear.scl(delta);
+//
+//            if (force.y < 0) {
+//                accelerate = ACC_ACCELERATE;
+//            } else if (force.y > 0) {
+//                accelerate = ACC_BRAKE;
+//            } else {
+//                accelerate = ACC_NONE;
+//            }
+//        }else{
+//            accelerate = ACC_NONE;
+//        }
+//
+//        if(Util.getAngleRotationToTarget(targetTank.getBody().getPosition(), getBody(), 5f, 0.1f) > 0){
+//            steer = STEER_RIGHT;
+//        }else{
+//            steer = STEER_LEFT;
+//        }
+
+
         boolean anyAcceleration = false;
 
         if(!steeringOutput.linear.isZero()){
             Vector2 force = steeringOutput.linear.scl(delta);
-//            getBody().applyForceToCenter(force, true);
-            if (force.y < 0) {
-                accelerate = ACC_ACCELERATE;
-            } else if (force.y > 0) {
-                accelerate = ACC_BRAKE;
-            } else {
-                accelerate = ACC_NONE;
-            }
-
-//            if (force.x < 0) {
-//                steer = STEER_LEFT;
-//            } else if (force.x > 0) {
-//                steer = STEER_RIGHT;
-//            } else {
-//                steer = STEER_NONE;
-//            }
-
+            getBody().applyForceToCenter(force, true);
             anyAcceleration = true;
-        }else{
-            accelerate = ACC_NONE;
-        }
-
-
-        if(steeringOutput.angular != 0){
-            getBody().applyTorque(steeringOutput.angular * delta, true);
-            anyAcceleration = true;
-        }else{
-            Vector2 linVel = getLinearVelocity();
-            if(!linVel.isZero()){
-                float newOrientation = vectorToAngle(linVel);
-//                getBody().setAngularVelocity((newOrientation - getAngularVelocity()) * delta);
-//                getBody().setTransform(getBody().getPosition(), newOrientation);
-
-                if (newOrientation < 0) {
-                    steer = STEER_LEFT;
-                } else if (newOrientation > 0) {
-                    steer = STEER_RIGHT;
-                } else {
-                    steer = STEER_NONE;
-                }
-
-            }
         }
 
 //        if(steeringOutput.angular != 0){
@@ -149,12 +129,10 @@ public class EnemyTank extends Tank implements Steerable<Vector2> {
 //        }else{
 //            Vector2 linVel = getLinearVelocity();
 //            if(!linVel.isZero()){
-//                float newOrientation = vectorToAngle(linVel);
-//                getBody().setAngularVelocity((newOrientation - getAngularVelocity()) * delta);
-//                getBody().setTransform(getBody().getPosition(), newOrientation);
+                getBody().setTransform(getBody().getPosition(),
+                        Util.normalizeAngle(getBody().getAngle()) + Util.getAngleRotationToTarget(targetTank.getBody().getPosition(), getBody(), 5f, 0.1f));
 //            }
 //        }
-
 
 //        if(anyAcceleration){
 //            //Linear Capping
@@ -291,5 +269,20 @@ public class EnemyTank extends Tank implements Steerable<Vector2> {
 
     public SteeringBehavior<Vector2> getBehavior(){
         return behavior;
+    }
+
+    @Override
+    public Steerable<Vector2> getOwner() {
+        return this;
+    }
+
+    @Override
+    public void setOwner(Steerable<Vector2> owner) {
+        this.owner = owner;
+    }
+
+    @Override
+    public int findNeighbors(ProximityCallback<Vector2> callback) {
+        return 0;
     }
 }
