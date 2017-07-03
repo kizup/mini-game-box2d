@@ -4,7 +4,6 @@ import com.badlogic.gdx.Game;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 
 import ru.kizup.minibox2dgame.model.Assets;
-import ru.kizup.minibox2dgame.screen.GameScreen;
 import ru.kizup.minibox2dgame.screen.MainUIScreen;
 import ru.kizup.minibox2dgame.screen.NewScreen;
 
@@ -25,7 +24,7 @@ public class MiniGame  extends Game {
     }
 
     public void startGame(){
-        setScreen(new GameScreen(this));
+//        setScreen(new GameScreen(this));
     }
 
     public void startMainMenu(){

@@ -19,9 +19,9 @@ import static ru.kizup.minibox2dgame.screen.GameScreen.BULLET_NONE;
  * Created by dpuzikov on 21.06.17.
  */
 
-public class EnemyTank extends Tank implements Steerable<Vector2>, Proximity<Vector2> {
+public class EnemyTank extends Tank implements Steerable<Vector2>{
 
-    private static final String TAG = "EnemyTank";
+    public static final String TAG = "EnemyTank";
 
     private Tank targetTank; // Таргет игрока
 
@@ -33,23 +33,22 @@ public class EnemyTank extends Tank implements Steerable<Vector2>, Proximity<Vec
     private float orientation;
     private float maxAngularSpeed;
     private float maxLinearAcceleration;
-    private Steerable<Vector2> owner;
 
     private SteeringBehavior<Vector2> behavior;
-    private SteeringAcceleration<Vector2> steeringOutput;
+    private static final SteeringAcceleration<Vector2> steeringOutput = new SteeringAcceleration<Vector2>(new Vector2());
 
-    public EnemyTank() {
-    }
+    public String n;
 
-    public EnemyTank(float width, float length, Vector2 position, float angle, float power, float maxSteerAngle, float maxSpeed, World world, Tank targetTank, float boundingRadius) {
+    public EnemyTank(String n, float width, float length, Vector2 position, float angle, float power, float maxSteerAngle, float maxSpeed, World world, Tank targetTank, float boundingRadius) {
         super(width, length, position, angle, power, maxSteerAngle, maxSpeed, world, 4);
+        this.n = n;
         this.targetTank = targetTank;
         setTargetVector(targetTank.getBody().getPosition());
 
         cooldownTime = MathUtils.random(2500, 5500);
         bullet = BULLET_NONE;
 
-        this.boundingRadius = boundingRadius;
+        this.boundingRadius = 10;
 
         this.maxLinearSpeed = 500;
         this.maxLinearAcceleration = 5000;
@@ -58,8 +57,7 @@ public class EnemyTank extends Tank implements Steerable<Vector2>, Proximity<Vec
 
         this.tagged = false;
 
-        this.steeringOutput = new SteeringAcceleration<Vector2>(new Vector2());
-        this.getBody().setUserData(this);
+        this.getBody().setUserData((Steerable<Vector2>) this);
     }
 
     @Override
@@ -83,10 +81,6 @@ public class EnemyTank extends Tank implements Steerable<Vector2>, Proximity<Vec
 
         if (targetTank != null) setTargetVector(targetTank.getBody().getPosition());
 
-//        if (bullet == BULLET_NONE && System.currentTimeMillis() - shootTime >= cooldownTime) {
-//            bullet = BULLET_EXIST;
-//        }
-
         if(behavior != null){
             behavior.calculateSteering(steeringOutput);
             applySteering(delta);
@@ -94,58 +88,13 @@ public class EnemyTank extends Tank implements Steerable<Vector2>, Proximity<Vec
     }
 
     private void applySteering(float delta){
-//        if(!steeringOutput.linear.isZero()){
-//            Vector2 force = steeringOutput.linear.scl(delta);
-//
-//            if (force.y < 0) {
-//                accelerate = ACC_ACCELERATE;
-//            } else if (force.y > 0) {
-//                accelerate = ACC_BRAKE;
-//            } else {
-//                accelerate = ACC_NONE;
-//            }
-//        }else{
-//            accelerate = ACC_NONE;
-//        }
-//
-//        if(Util.getAngleRotationToTarget(targetTank.getBody().getPosition(), getBody(), 5f, 0.1f) > 0){
-//            steer = STEER_RIGHT;
-//        }else{
-//            steer = STEER_LEFT;
-//        }
-
-
-        boolean anyAcceleration = false;
-
         if(!steeringOutput.linear.isZero()){
             Vector2 force = steeringOutput.linear.scl(delta);
             getBody().applyForceToCenter(force, true);
-            anyAcceleration = true;
         }
 
-//        if(steeringOutput.angular != 0){
-//            getBody().applyTorque(steeringOutput.angular * delta, true);
-//            anyAcceleration = true;
-//        }else{
-//            Vector2 linVel = getLinearVelocity();
-//            if(!linVel.isZero()){
-                getBody().setTransform(getBody().getPosition(),
-                        Util.normalizeAngle(getBody().getAngle()) + Util.getAngleRotationToTarget(targetTank.getBody().getPosition(), getBody(), 5f, 0.1f));
-//            }
-//        }
-
-//        if(anyAcceleration){
-//            //Linear Capping
-//            Vector2 velocity = getBody().getLinearVelocity();
-//            float currentSpeedSquare = velocity.len2();
-//            if(currentSpeedSquare > maxLinearSpeed * maxLinearSpeed){
-//                getBody().setLinearVelocity(velocity.scl(maxAngularSpeed / (float) Math.sqrt(currentSpeedSquare)));
-//            }
-//            //Linear Capping
-//            if(getBody().getAngularVelocity() > maxAngularSpeed){
-//                getBody().setAngularVelocity(maxAngularSpeed);
-//            }
-//        }
+        getBody().setTransform(getBody().getPosition(),
+                Util.normalizeAngle(getBody().getAngle()) + Util.getAngleRotationToTarget(targetTank.getBody().getPosition(), getBody(), 5f, 0.1f));
     }
 
     public void setTargetVector(Vector2 targetVector) {
@@ -269,20 +218,5 @@ public class EnemyTank extends Tank implements Steerable<Vector2>, Proximity<Vec
 
     public SteeringBehavior<Vector2> getBehavior(){
         return behavior;
-    }
-
-    @Override
-    public Steerable<Vector2> getOwner() {
-        return this;
-    }
-
-    @Override
-    public void setOwner(Steerable<Vector2> owner) {
-        this.owner = owner;
-    }
-
-    @Override
-    public int findNeighbors(ProximityCallback<Vector2> callback) {
-        return 0;
     }
 }

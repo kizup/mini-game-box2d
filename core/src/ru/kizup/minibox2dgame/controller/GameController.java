@@ -3,6 +3,9 @@ package ru.kizup.minibox2dgame.controller;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.ai.steer.behaviors.Arrive;
 import com.badlogic.gdx.ai.steer.behaviors.CollisionAvoidance;
+import com.badlogic.gdx.ai.steer.behaviors.PrioritySteering;
+import com.badlogic.gdx.ai.steer.behaviors.Wander;
+import com.badlogic.gdx.ai.steer.limiters.LinearAccelerationLimiter;
 import com.badlogic.gdx.graphics.FPSLogger;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.math.MathUtils;
@@ -42,6 +45,7 @@ public class GameController {
     private Array<BoxProp> boxProps;
 
     private B2dSteeringEnemy target;
+    Array<Box2dRadiusProximity>  proximities = new Array<Box2dRadiusProximity>();
 
     public GameController() {
         widthInMeters = Gdx.graphics.getWidth() / PIXELS_TO_METERS * 1.2f;
@@ -69,12 +73,20 @@ public class GameController {
                     .setDecelerationRadius(10);
             enemyTank.setBehavior(vector2Arrive);
 
-//            for(int i = 0; i < enemies.size - 1; i++) {
-//                if(enemies.get(i) != enemyTank) {
-//                    CollisionAvoidance<Vector2> vector2CollisionAvoidance = new CollisionAvoidance<Vector2>(enemyTank, enemies.get(i));
-//                    enemyTank.setBehaviorAvoidanceCollision(vector2CollisionAvoidance);
-//                }
-//            }
+            Box2dRadiusProximity proximity = new Box2dRadiusProximity(enemyTank, world,
+                    15 * 4);
+            proximity.setDetectionRadius(10);
+
+            proximities.add(proximity);
+
+            CollisionAvoidance<Vector2> collisionAvoidanceSB = new CollisionAvoidance<Vector2>(enemyTank, proximity);
+
+            PrioritySteering<Vector2> prioritySteeringSB = new PrioritySteering<Vector2>(enemyTank, 0.0001f);
+            prioritySteeringSB.add(collisionAvoidanceSB);
+            prioritySteeringSB.add(vector2Arrive);
+
+            enemyTank.setBehavior(prioritySteeringSB);
+
         }
     }
 
@@ -83,12 +95,12 @@ public class GameController {
             enemies.add(generateEnemy());
         }
     }
-
+int n = 0;
     private EnemyTank generateEnemy() {
         int x = MathUtils.random(5, (int) widthInMeters - 5);
         int y = MathUtils.random(5, (int) heightInMeters - 5);
-
-        EnemyTank tank = new EnemyTank(2, 4, new Vector2(x, y), 0, 200, 5, 40, world, player, 5);
+        n++;
+        EnemyTank tank = new EnemyTank("" + n, 2, 4, new Vector2(x, y), 0, 200, 5, 40, world, player, 5);
         tank.setTankStateListener(new TankStateListener() {
             @Override
             public void destroyBullet(Vector2 position) {
