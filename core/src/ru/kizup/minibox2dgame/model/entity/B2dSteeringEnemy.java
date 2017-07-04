@@ -47,42 +47,95 @@ public class B2dSteeringEnemy implements Steerable<Vector2>{
     public void update(float delta){
         if(behavior != null){
             behavior.calculateSteering(steeringOutput);
-            applySteering(delta);
+            applySteering(steeringOutput, delta);
         }
     }
+//
+//    private void applySteering(float delta){
+//        boolean anyAcceleration = false;
+//
+//        if(!steeringOutput.linear.isZero()){
+//            Vector2 force = steeringOutput.linear.scl(delta);
+//            body.applyForceToCenter(force, true);
+//            anyAcceleration = true;
+//        }
+//
+//        if(steeringOutput.angular != 0){
+//            body.applyTorque(steeringOutput.angular * delta, true);
+//            Gdx.app.log("my_log", steeringOutput.angular + " ");
+//            anyAcceleration = true;
+//        }else{
+//            Vector2 linVel = getLinearVelocity();
+//            Gdx.app.log("my_log", linVel.toString());
+//            if(!linVel.isZero()){
+//                float newOrientation = vectorToAngle(linVel);
+//                body.setAngularVelocity((newOrientation - getAngularVelocity()) * delta);
+//                body.setTransform(body.getPosition(), newOrientation);
+//            }
+//        }
+//
+//
+//        if(anyAcceleration){
+//            //Linear Capping
+//            Vector2 velocity = body.getLinearVelocity();
+//            float currentSpeedSquare = velocity.len2();
+//            if(currentSpeedSquare > maxLinearSpeed * maxLinearSpeed){
+//                body.setLinearVelocity(velocity.scl(maxAngularSpeed / (float) Math.sqrt(currentSpeedSquare)));
+//            }
+//            //Linear Capping
+//            if(body.getAngularVelocity() > maxAngularSpeed){
+//                body.setAngularVelocity(maxAngularSpeed);
+//            }
+//        }
+//    }
 
-    private void applySteering(float delta){
-        boolean anyAcceleration = false;
+    protected void applySteering (SteeringAcceleration<Vector2> steering, float deltaTime) {
+        boolean anyAccelerations = false;
 
-        if(!steeringOutput.linear.isZero()){
-            Vector2 force = steeringOutput.linear.scl(delta);
-            body.applyForceToCenter(force, true);
-            anyAcceleration = true;
+        // Update position and linear velocity.
+        if (!steeringOutput.linear.isZero()) {
+            // this method internally scales the force by deltaTime
+            body.applyForceToCenter(steeringOutput.linear, true);
+            anyAccelerations = true;
         }
 
-        if(steeringOutput.angular != 0){
-            body.applyTorque(steeringOutput.angular * delta, true);
-            anyAcceleration = true;
-        }else{
+        // Update orientation and angular velocity
+//        if (isIndependentFacing()) {
+//            if (steeringOutput.angular != 0) {
+//                // this method internally scales the torque by deltaTime
+//                body.applyTorque(steeringOutput.angular, true);
+//                anyAccelerations = true;
+//            }
+//        } else {
+            // If we haven't got any velocity, then we can do nothing.
             Vector2 linVel = getLinearVelocity();
-            if(!linVel.isZero()){
+            if (!linVel.isZero(getZeroLinearSpeedThreshold())) {
                 float newOrientation = vectorToAngle(linVel);
-                body.setAngularVelocity((newOrientation - getAngularVelocity()) * delta);
+                body.setAngularVelocity((newOrientation - getAngularVelocity()) * deltaTime); // this is superfluous if independentFacing is always true
                 body.setTransform(body.getPosition(), newOrientation);
-            }
+//            }
         }
 
+        if (anyAccelerations) {
+            // body.activate();
 
-        if(anyAcceleration){
-            //Linear Capping
+            // TODO:
+            // Looks like truncating speeds here after applying forces doesn't work as expected.
+            // We should likely cap speeds form inside an InternalTickCallback, see
+            // http://www.bulletphysics.org/mediawiki-1.5.8/index.php/Simulation_Tick_Callbacks
+
+            // Cap the linear speed
             Vector2 velocity = body.getLinearVelocity();
             float currentSpeedSquare = velocity.len2();
-            if(currentSpeedSquare > maxLinearSpeed * maxLinearSpeed){
-                body.setLinearVelocity(velocity.scl(maxAngularSpeed / (float) Math.sqrt(currentSpeedSquare)));
+            float maxLinearSpeed = getMaxLinearSpeed();
+            if (currentSpeedSquare > maxLinearSpeed * maxLinearSpeed) {
+                body.setLinearVelocity(velocity.scl(maxLinearSpeed / (float)Math.sqrt(currentSpeedSquare)));
             }
-            //Linear Capping
-            if(body.getAngularVelocity() > maxAngularSpeed){
-                body.setAngularVelocity(maxAngularSpeed);
+
+            // Cap the angular speed
+            float maxAngVelocity = getMaxAngularSpeed();
+            if (body.getAngularVelocity() > maxAngVelocity) {
+                body.setAngularVelocity(maxAngVelocity);
             }
         }
     }
