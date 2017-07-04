@@ -1,6 +1,7 @@
 package ru.kizup.minibox2dgame.screen;
 
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.InputMultiplexer;
 import com.badlogic.gdx.ScreenAdapter;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.GL20;
@@ -63,6 +64,8 @@ public class NewScreen extends ScreenAdapter {
         table.add(maxSpeedLabel).left().pad(0, PIXELS_TO_METERS, 0, 0);
         table.row().left();
         table.add(fpsLabel).left().pad(0, PIXELS_TO_METERS, 0, 0);
+        Gdx.input.setInputProcessor(new InputMultiplexer(stage));
+        ((InputMultiplexer) Gdx.input.getInputProcessor()).addProcessor(gameController.inputProcessor);
     }
 
     @Override
@@ -74,6 +77,7 @@ public class NewScreen extends ScreenAdapter {
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
 
         batch.begin();
+        gameController.targetAim.draw(batch);
         Assets.sExplosionEffect.draw(batch);
         Assets.sSmallExplosionEffect.draw(batch);
         batch.end();
