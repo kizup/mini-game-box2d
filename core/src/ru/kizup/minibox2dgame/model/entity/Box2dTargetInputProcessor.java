@@ -3,7 +3,6 @@ package ru.kizup.minibox2dgame.model.entity;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.InputAdapter;
 import com.badlogic.gdx.math.Vector2;
-import com.badlogic.gdx.utils.Align;
 
 public class Box2dTargetInputProcessor extends InputAdapter {
 	protected Box2dSteeringEntity target;

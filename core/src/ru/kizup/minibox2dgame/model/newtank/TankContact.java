@@ -1,6 +1,7 @@
 package ru.kizup.minibox2dgame.model.newtank;
 
 import com.badlogic.gdx.ai.steer.Steerable;
+import com.badlogic.gdx.ai.steer.SteeringBehavior;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.Body;
 
@@ -33,6 +34,11 @@ public interface TankContact {
         double getSpeedKmH();
 
         Body getBody();
+
+        void setTargetVector(Vector2 position);
+
+        void setBehavior(SteeringBehavior<Vector2> behavior);
+
     }
 
     interface Presenter {
@@ -80,8 +86,6 @@ public interface TankContact {
         boolean isEnemy();
 
         void setShotTime(long shotTime);
-
-        Vector2 getPosition();
 
         float getPositionX();
 

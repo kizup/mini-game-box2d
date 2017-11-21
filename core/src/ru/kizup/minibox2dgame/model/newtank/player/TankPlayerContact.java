@@ -1,7 +1,6 @@
 package ru.kizup.minibox2dgame.model.newtank.player;
 
 import ru.kizup.minibox2dgame.model.newtank.TankContact;
-import ru.kizup.minibox2dgame.model.newtank.TankView;
 
 /**
  * Created by yks-11 on 11/21/17.

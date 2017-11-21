@@ -53,4 +53,9 @@ public class PlayerTankTurret extends TankTurret {
 
         setTankPrevRotation(vehicle.getBody().getAngle());
     }
+
+    @Override
+    public void setTargetVector(Vector2 targetVector) {
+        //TODO: apply setTargetVector if need
+    }
 }

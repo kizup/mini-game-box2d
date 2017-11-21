@@ -1,6 +1,7 @@
 package ru.kizup.minibox2dgame.model.newtank.player;
 
 import ru.kizup.minibox2dgame.model.newtank.Tank;
+import ru.kizup.minibox2dgame.model.newtank.TankController;
 import ru.kizup.minibox2dgame.model.newtank.TankPresenter;
 
 /**
@@ -9,7 +10,7 @@ import ru.kizup.minibox2dgame.model.newtank.TankPresenter;
 
 public class TankPlayerPresenter extends TankPresenter implements TankPlayerContact.Presenter {
 
-    private TankPlayerContact.View view;
+    private TankPlayerContact.View viewPlayer;
 
     public TankPlayerPresenter(Tank tank) {
         super(tank);
@@ -18,13 +19,13 @@ public class TankPlayerPresenter extends TankPresenter implements TankPlayerCont
     @Override
     public void update(float delta) {
         super.update(delta);
-        view.handleInput(tank.getAccelerate(), tank.getSteer(), tank.getBullet());
+        viewPlayer.handleInput(tank.getAccelerate(), tank.getSteer(), tank.getBullet());
     }
 
     @Override
     public void setView(TankPlayerContact.View view) {
         super.setView(view);
-        this.view = view;
+        this.viewPlayer = view;
     }
 
     @Override

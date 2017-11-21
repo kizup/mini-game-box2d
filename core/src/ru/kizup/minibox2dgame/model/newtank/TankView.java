@@ -25,7 +25,9 @@ import ru.kizup.minibox2dgame.util.Preconditions;
 
 import static ru.kizup.minibox2dgame.model.newtank.Tank.ACC_ACCELERATE;
 import static ru.kizup.minibox2dgame.model.newtank.Tank.ACC_BRAKE;
-import static ru.kizup.minibox2dgame.model.newtank.Tank.*;
+import static ru.kizup.minibox2dgame.model.newtank.Tank.STEER_LEFT;
+import static ru.kizup.minibox2dgame.model.newtank.Tank.STEER_NONE;
+import static ru.kizup.minibox2dgame.model.newtank.Tank.STEER_RIGHT;
 import static ru.kizup.minibox2dgame.screen.GameScreen.BULLET_EXIST;
 
 /**
@@ -34,25 +36,24 @@ import static ru.kizup.minibox2dgame.screen.GameScreen.BULLET_EXIST;
 
 public abstract class TankView implements TankContact.View, Vehicle{
 
-    protected TankContact.Presenter presenter;
+    private TankContact.Presenter presenter;
+    protected TankTurret tankTurret;
+    protected SteeringBehavior<Vector2> behavior;
+    protected World world;
 
-    private Body body;
-    private World world;
-    private TankTurret tankTurret;
+    private Body bodyTank;
     private List<Bullet> bulletList = new ArrayList<Bullet>();
     private Track[] tracks;
-    private SteeringBehavior<Vector2> behavior;
 
-    public TankView(TankContact.Presenter presenter, World world, SteeringBehavior<Vector2> behavior){
+    public TankView(TankContact.Presenter presenter, World world){
         this.presenter = Preconditions.checkNotNull(presenter);
         this.world= Preconditions.checkNotNull(world);
-        this.behavior = behavior;
     }
 
     @Override
     public void update(float delta, int hitPoints, int accelerate, float maxSpeed, int steer, float power, float koefRotation, long shootTime, long cooldownTime, int bullet) {
         if (hitPoints <= 0) {
-            body.setActive(false);
+            bodyTank.setActive(false);
 
             Assets.sExplosionEffect.reset();
             Assets.sExplosionEffect.setPosition(getPositionX(), getPositionY());
@@ -173,7 +174,7 @@ public abstract class TankView implements TankContact.View, Vehicle{
         def.bullet = false;
 
         def.angularDamping = 3.3f;
-        body = world.createBody(def);
+        bodyTank = world.createBody(def);
 
         // Tank shape
         FixtureDef fixtureDef = new FixtureDef();
@@ -191,8 +192,8 @@ public abstract class TankView implements TankContact.View, Vehicle{
         shape.setAsBox(width / 2, length / 2);
 
         fixtureDef.shape = shape;
-        body.createFixture(fixtureDef);
-        body.setUserData(this);
+        bodyTank.createFixture(fixtureDef);
+        bodyTank.setUserData(this);
     }
 
     @Override
@@ -203,18 +204,13 @@ public abstract class TankView implements TankContact.View, Vehicle{
     }
 
     @Override
-    public void initTankTower() {
-        tankTurret = new PlayerTankTurret(new Vector2(1, 2f), this, world, new Vector2(0, 1f));
-    }
-
-    @Override
     public Vector2 getLinearVelocity() {
-        return body.getLinearVelocity();
+        return bodyTank.getLinearVelocity();
     }
 
     @Override
     public float getAngularVelocity() {
-        return body.getAngularVelocity();
+        return bodyTank.getAngularVelocity();
     }
 
     @Override
@@ -284,7 +280,7 @@ public abstract class TankView implements TankContact.View, Vehicle{
 
     @Override
     public Vector2 getPosition() {
-        return body.getPosition();
+        return bodyTank.getPosition();
     }
 
     @Override
@@ -331,27 +327,27 @@ public abstract class TankView implements TankContact.View, Vehicle{
 
     @Override
     public float getPositionX() {
-        return body.getPosition().x * MiniGame.PIXELS_TO_METERS;
+        return bodyTank.getPosition().x * MiniGame.PIXELS_TO_METERS;
     }
 
     @Override
     public float getPositionY() {
-        return body.getPosition().y * MiniGame.PIXELS_TO_METERS;
+        return bodyTank.getPosition().y * MiniGame.PIXELS_TO_METERS;
     }
 
     @Override
     public double getSpeedKmH() {
-        Vector2 velocity = body.getLinearVelocity();
+        Vector2 velocity = bodyTank.getLinearVelocity();
         return (velocity.len() / 1000) * 3600;
     }
 
     protected Vector2 getLocalVelocity() {
-        return body.getLocalVector(body.getLinearVelocityFromLocalPoint(getPosition()));
+        return bodyTank.getLocalVector(bodyTank.getLinearVelocityFromLocalPoint(getPosition()));
     }
 
     @Override
     public void destroy() {
-        world.destroyBody(body);
+        world.destroyBody(bodyTank);
         world.destroyBody(tankTurret.getTurretBody());
         world.destroyBody(tracks[0].getWheelBody());
         world.destroyBody(tracks[1].getWheelBody());
@@ -362,7 +358,7 @@ public abstract class TankView implements TankContact.View, Vehicle{
 
     @Override
     public Body getBody() {
-        return body;
+        return bodyTank;
     }
 
     @Override
@@ -373,5 +369,15 @@ public abstract class TankView implements TankContact.View, Vehicle{
     @Override
     public void update(float delta) {
         presenter.update(delta);
+    }
+
+    @Override
+    public void setTargetVector(Vector2 position) {
+        tankTurret.setTargetVector(position);
+    }
+
+    @Override
+    public void setBehavior(SteeringBehavior<Vector2> behavior) {
+        this.behavior = behavior;
     }
 }

@@ -1,5 +1,7 @@
 package ru.kizup.minibox2dgame.model.newtank;
 
+import com.badlogic.gdx.ai.steer.Steerable;
+import com.badlogic.gdx.ai.steer.SteeringBehavior;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.Body;
 
@@ -10,10 +12,10 @@ import ru.kizup.minibox2dgame.util.SteeringUtils;
  * Created by yks-11 on 11/20/17.
  */
 
-public abstract class TankPresenter implements TankContact.Presenter{
+public abstract class TankPresenter implements TankContact.Presenter, TankController{
 
     protected Tank tank;
-    protected TankContact.View view;
+    private TankContact.View view;
 
     public TankPresenter(Tank tank){
         this.tank = tank;
@@ -165,5 +167,20 @@ public abstract class TankPresenter implements TankContact.Presenter{
     @Override
     public Body getBody() {
         return view.getBody();
+    }
+
+    @Override
+    public void setTargetVector(Vector2 position) {
+        view.setTargetVector(position);
+    }
+
+    @Override
+    public void setBehavior(SteeringBehavior<Vector2> behavior) {
+        view.setBehavior(behavior);
+    }
+
+    @Override
+    public Steerable<Vector2> getView() {
+        return view;
     }
 }

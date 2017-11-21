@@ -1,15 +1,12 @@
 package ru.kizup.minibox2dgame.controller;
 
 import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.InputMultiplexer;
+import com.badlogic.gdx.ai.steer.SteeringBehavior;
 import com.badlogic.gdx.ai.steer.behaviors.Arrive;
 import com.badlogic.gdx.ai.steer.behaviors.CollisionAvoidance;
-import com.badlogic.gdx.ai.steer.behaviors.Face;
 import com.badlogic.gdx.ai.steer.behaviors.PrioritySteering;
 import com.badlogic.gdx.graphics.FPSLogger;
-import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
-import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.Batch;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
@@ -24,19 +21,27 @@ import com.badlogic.gdx.physics.box2d.World;
 import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.scenes.scene2d.ui.Table;
 import com.badlogic.gdx.utils.Array;
-import com.badlogic.gdx.utils.Timer;
+
+import java.util.HashSet;
+import java.util.Set;
 
 import ru.kizup.minibox2dgame.MiniGame;
-import ru.kizup.minibox2dgame.model.*;
+import ru.kizup.minibox2dgame.model.Assets;
+import ru.kizup.minibox2dgame.model.Border;
+import ru.kizup.minibox2dgame.model.Box2dRadiusProximity;
+import ru.kizup.minibox2dgame.model.BoxProp;
 import ru.kizup.minibox2dgame.model.entity.B2dSteeringEnemy;
 import ru.kizup.minibox2dgame.model.entity.Box2dSteeringEntity;
-import ru.kizup.minibox2dgame.model.entity.Box2dTargetInputProcessor;
 import ru.kizup.minibox2dgame.model.factory.BordersFactory;
+import ru.kizup.minibox2dgame.model.newtank.TankController;
 import ru.kizup.minibox2dgame.model.newtank.TankFactory;
+import ru.kizup.minibox2dgame.model.newtank.TankPresenter;
+import ru.kizup.minibox2dgame.model.newtank.TankView;
+import ru.kizup.minibox2dgame.model.newtank.enemy.TankEnemyPresenter;
+import ru.kizup.minibox2dgame.model.newtank.enemy.TankEnemyView;
 import ru.kizup.minibox2dgame.model.newtank.player.TankPlayerPresenter;
 import ru.kizup.minibox2dgame.model.newtank.player.TankPlayerView;
 import ru.kizup.minibox2dgame.model.tank.EnemyTank;
-import ru.kizup.minibox2dgame.model.tank.PlayerTank;
 import ru.kizup.minibox2dgame.model.tank.Tank;
 
 import static ru.kizup.minibox2dgame.MiniGame.PIXELS_TO_METERS;
@@ -51,22 +56,16 @@ public class GameController {
     private float heightInMeters;
     private World world;
     private OrthographicCamera camera;
-//    private PlayerTank player;
-    private FPSLogger fpsLogger;
-    private Array<EnemyTank> enemies = new Array<EnemyTank>();
+
     private Array<BoxProp> boxProps;
+    private Array<Box2dRadiusProximity>  proximities = new Array<Box2dRadiusProximity>();
 
+    private Stage stage;
+    private Batch spriteBatch;
+
+    private Set<TankController> enemies = new HashSet<TankController>();
+    private TankController playerTank;
     private B2dSteeringEnemy targetPlayer;
-    Array<Box2dRadiusProximity>  proximities = new Array<Box2dRadiusProximity>();
-
-    //Инициализируем прицел (target)
-//    public TextureRegion targetTexture;
-//    public Box2dSteeringEntity targetAim;
-//    public Box2dTargetInputProcessor inputProcessor;
-    public Table testTable;
-    public float lastUpdateTime;
-    public Stage stage;
-    public Batch spriteBatch;
 
     public GameController() {
         stage = new Stage();
@@ -78,10 +77,8 @@ public class GameController {
         world.setContactListener(new ContactWorldListener());
         camera = new OrthographicCamera(Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
         camera.position.set(camera.viewportWidth / 2, camera.viewportHeight / 2, 0);
-        fpsLogger = new FPSLogger();
         initBorders();
         initPlayer();
-        initEnemy();
 
         boxProps = new Array<BoxProp>();
         Vector2 center = new Vector2(widthInMeters / 2, heightInMeters / 2);
@@ -89,28 +86,7 @@ public class GameController {
         boxProps.add(new BoxProp(6, 6, center.x + 3, center.y, world, CollisionCategory.MASK_SCENERY));
         boxProps.add(new BoxProp(1, 1, center.x + 2, center.y + 10f, world, CollisionCategory.MASK_SCENERY));
 
-        targetPlayer = new B2dSteeringEnemy(playerTank.getBody(), 10);
-
-        for(EnemyTank enemyTank : enemies) {
-            Arrive<Vector2> vector2Arrive = new Arrive<Vector2>(enemyTank, targetPlayer)
-                    .setArrivalTolerance(15f)
-                    .setDecelerationRadius(10);
-            enemyTank.setBehavior(vector2Arrive);
-
-            Box2dRadiusProximity proximity = new Box2dRadiusProximity(enemyTank, world,
-                    15 * 4);
-            proximity.setDetectionRadius(10);
-
-            proximities.add(proximity);
-
-            CollisionAvoidance<Vector2> collisionAvoidanceSB = new CollisionAvoidance<Vector2>(enemyTank, proximity);
-
-            PrioritySteering<Vector2> prioritySteeringSB = new PrioritySteering<Vector2>(enemyTank, 0.0001f);
-            prioritySteeringSB.add(collisionAvoidanceSB);
-            prioritySteeringSB.add(vector2Arrive);
-
-            enemyTank.setBehavior(prioritySteeringSB);
-        }
+        initEnemy();
 
         //Инициализируем прицел (target)
 //        targetTexture = new TextureRegion(new Texture("aim.png"));
@@ -163,30 +139,53 @@ public class GameController {
         }
     }
 
-int n = 0;
-    private EnemyTank generateEnemy() {
+    private TankEnemyPresenter generateEnemy() {
         int x = MathUtils.random(5, (int) widthInMeters - 5);
         int y = MathUtils.random(5, (int) heightInMeters - 5);
-        n++;
-        EnemyTank tank = new EnemyTank("" + n, 2, 4, new Vector2(x, y), 0, 200, 5, 40, world, playerTank, 5);
-        tank.setTankStateListener(new TankStateListener() {
-            @Override
-            public void destroyBullet(Vector2 position) {
-                Assets.sSmallExplosionEffect.reset();
-                Assets.sSmallExplosionEffect.setPosition(position.x * MiniGame.PIXELS_TO_METERS,
-                        position.y * MiniGame.PIXELS_TO_METERS);
-            }
+        Vector2 position = new Vector2(x, y);
+        TankEnemyPresenter tankEnemyPresenter = new TankEnemyPresenter(TankFactory.getTankEnemy(position));
+        new TankEnemyView(tankEnemyPresenter, world, playerTank);
+        initEnemyBehavior(tankEnemyPresenter);
 
-            @Override
-            public void destroyTank(Tank tank) {
-                enemies.removeValue((EnemyTank) tank, false);
-                enemies.add(generateEnemy());
-            }
-        });
-        return tank;
+        //        EnemyTank tank = new EnemyTank("" + n, 2, 4, new Vector2(x, y), 0, 200, 5, 40, world, playerTank, 5);
+//        tank.setTankStateListener(new TankStateListener() {
+//            @Override
+//            public void destroyBullet(Vector2 position) {
+//                Assets.sSmallExplosionEffect.reset();
+//                Assets.sSmallExplosionEffect.setPosition(position.x * MiniGame.PIXELS_TO_METERS,
+//                        position.y * MiniGame.PIXELS_TO_METERS);
+//            }
+//
+//            @Override
+//            public void destroyTank(Tank tank) {
+//                enemies.removeValue((EnemyTank) tank, false);
+//                enemies.add(generateEnemy());
+//            }
+//        });
+        return tankEnemyPresenter;
     }
 
-    public Box2dSteeringEntity createSteeringEntity (World world, TextureRegion region, boolean independentFacing, int posX, int posY) {
+    private void initEnemyBehavior(TankPresenter tankPresenter){
+        Arrive<Vector2> vector2Arrive = new Arrive<Vector2>(tankPresenter.getView(), targetPlayer)
+                .setArrivalTolerance(15f)
+                .setDecelerationRadius(10);
+
+        Box2dRadiusProximity proximity = new Box2dRadiusProximity(tankPresenter.getView(), world,
+                15 * 4);
+        proximity.setDetectionRadius(10);
+
+        proximities.add(proximity);
+
+        CollisionAvoidance<Vector2> collisionAvoidanceSB = new CollisionAvoidance<Vector2>(tankPresenter.getView(), proximity);
+
+        PrioritySteering<Vector2> prioritySteeringSB = new PrioritySteering<Vector2>(tankPresenter.getView(), 0.0001f);
+        prioritySteeringSB.add(collisionAvoidanceSB);
+        prioritySteeringSB.add(vector2Arrive);
+
+        tankPresenter.setBehavior(prioritySteeringSB);
+    }
+
+    public Box2dSteeringEntity createSteeringEntity(World world, TextureRegion region, boolean independentFacing, int posX, int posY) {
 
         CircleShape circleChape = new CircleShape();
         circleChape.setPosition(new Vector2());
@@ -209,11 +208,12 @@ int n = 0;
         return new Box2dSteeringEntity(region, characterBody, independentFacing, radiusInPixels);
     }
 
-    TankPlayerPresenter playerTank;
-
     private void initPlayer() {
-        this.playerTank = new TankPlayerPresenter(TankFactory.getTankUser());
-        TankPlayerView tankPlayerView = new TankPlayerView(playerTank, world, null);
+        TankPlayerPresenter presenter = new TankPlayerPresenter(TankFactory.getTankUser());
+        new TankPlayerView(presenter, world);
+        targetPlayer = new B2dSteeringEnemy(presenter.getBody(), 10);
+        playerTank = presenter;
+
 //        player = new PlayerTank(2, 4, new Vector2(10, 10), 0, 60, 5, 40, world);
 //        player.setTankStateListener(new TankStateListener() {
 //            @Override
@@ -239,11 +239,14 @@ int n = 0;
 //            }
 //        });
 
-        if (enemies.size > 0) {
-            for (int i = 0; i < enemies.size; i++) {
-                enemies.get(i).setTargetVector(playerTank.getPosition());
-            }
-        }
+//        if (enemies.size() > 0) {
+//            for (TankController enemy : enemies) {
+//                enemy.setTargetVector(playerTank.getPosition());
+//            }
+//            for (int i = 0; i < enemies.size(); i++) {
+//                enemies.get(i).setTargetVector(playerTank.getPosition());
+//            }
+//        }
     }
 
     private void initBorders() {
@@ -260,8 +263,8 @@ int n = 0;
         if (playerTank != null) playerTank.update(delta);
 
         // Updating enemy tanks
-        for (int i = 0; i < enemies.size; i++) {
-            enemies.get(i).update(delta);
+        for (TankController enemy : enemies) {
+            enemy.update(delta);
         }
 
         // Updating camera if player is alive

@@ -89,7 +89,7 @@ public abstract class Tank implements Vehicle {
         if (koefRotation == 0 || koefRotation > power)
             throw new ArithmeticException("Коэффициент поворота танка должен быть в диапазоне [1;power]");
 
-        this.bullet = BULLET_NONE;
+        bullet = BULLET_NONE;
         this.width = width;
         this.length = length;
         this.position = position;

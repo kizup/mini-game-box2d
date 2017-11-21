@@ -6,10 +6,16 @@ import com.badlogic.gdx.ai.steer.SteeringBehavior;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.World;
 
-import ru.kizup.minibox2dgame.model.newtank.TankContact;
 import ru.kizup.minibox2dgame.model.newtank.TankView;
+import ru.kizup.minibox2dgame.model.turret.EnemyTankTurret;
+import ru.kizup.minibox2dgame.model.turret.PlayerTankTurret;
 
-import static ru.kizup.minibox2dgame.model.newtank.Tank.*;
+import static ru.kizup.minibox2dgame.model.newtank.Tank.ACC_ACCELERATE;
+import static ru.kizup.minibox2dgame.model.newtank.Tank.ACC_BRAKE;
+import static ru.kizup.minibox2dgame.model.newtank.Tank.ACC_NONE;
+import static ru.kizup.minibox2dgame.model.newtank.Tank.STEER_LEFT;
+import static ru.kizup.minibox2dgame.model.newtank.Tank.STEER_NONE;
+import static ru.kizup.minibox2dgame.model.newtank.Tank.STEER_RIGHT;
 import static ru.kizup.minibox2dgame.screen.GameScreen.BULLET_EXIST;
 import static ru.kizup.minibox2dgame.screen.GameScreen.BULLET_NONE;
 
@@ -19,13 +25,13 @@ import static ru.kizup.minibox2dgame.screen.GameScreen.BULLET_NONE;
 
 public class TankPlayerView extends TankView implements TankPlayerContact.View{
 
-    private TankPlayerContact.Presenter presenter;
+    private TankPlayerContact.Presenter presenterPlayer;
 
-    public TankPlayerView(TankPlayerContact.Presenter presenter, World world, SteeringBehavior<Vector2> behavior) {
-        super(presenter, world, behavior);
-        this.presenter = presenter;
+    public TankPlayerView(TankPlayerContact.Presenter presenter, World world) {
+        super(presenter, world);
+        this.presenterPlayer = presenter;
 
-        presenter.setView(this);
+        this.presenterPlayer.setView(this);
     }
 
     @Override
@@ -37,30 +43,35 @@ public class TankPlayerView extends TankView implements TankPlayerContact.View{
     @Override
     public void handleInput(int accelerate, int steer, int bullet) {
         if (Gdx.input.isKeyPressed(Input.Keys.UP)) {
-            presenter.setAccelerate(ACC_ACCELERATE);
+            presenterPlayer.setAccelerate(ACC_ACCELERATE);
         } else if (Gdx.input.isKeyPressed(Input.Keys.DOWN)) {
-            presenter.setAccelerate(ACC_BRAKE);
+            presenterPlayer.setAccelerate(ACC_BRAKE);
         } else {
-            presenter.setAccelerate(ACC_NONE);
+            presenterPlayer.setAccelerate(ACC_NONE);
         }
 
         if (Gdx.input.isKeyPressed(Input.Keys.LEFT)) {
-            presenter.setSteer(STEER_LEFT);
+            presenterPlayer.setSteer(STEER_LEFT);
         } else if (Gdx.input.isKeyPressed(Input.Keys.RIGHT)) {
-            presenter.setSteer(STEER_RIGHT);
+            presenterPlayer.setSteer(STEER_RIGHT);
         } else {
-            presenter.setSteer(STEER_NONE);
+            presenterPlayer.setSteer(STEER_NONE);
         }
 
         if (Gdx.input.isKeyJustPressed(Input.Keys.SPACE)) {
-            presenter.setAccelerate(ACC_NONE);
-            presenter.setSteer(STEER_NONE);
+            presenterPlayer.setAccelerate(ACC_NONE);
+            presenterPlayer.setSteer(STEER_NONE);
         }
 
         if (Gdx.input.isKeyJustPressed(Input.Keys.CONTROL_LEFT)) {
-            presenter.setBullet(BULLET_EXIST);
+            presenterPlayer.setBullet(BULLET_EXIST);
         } else {
-            presenter.setBullet(BULLET_NONE);
+            presenterPlayer.setBullet(BULLET_NONE);
         }
+    }
+
+    @Override
+    public void initTankTower() {
+        tankTurret = new PlayerTankTurret(new Vector2(1, 2f), this, world, new Vector2(0, 1f));
     }
 }

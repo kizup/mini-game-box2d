@@ -52,6 +52,8 @@ public abstract class TankTurret {
     private World world;
     private Vector2 margin;
 
+    public abstract void setTargetVector(Vector2 targetVector);
+
     TankTurret(Vector2 position, Vehicle vehicle, World world, Vector2 margin) {
         this.position = position;
         this.vehicle = vehicle;

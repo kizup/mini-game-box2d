@@ -14,8 +14,8 @@ import com.badlogic.gdx.scenes.scene2d.ui.Table;
 import com.badlogic.gdx.utils.Align;
 
 import ru.kizup.minibox2dgame.MiniGame;
-import ru.kizup.minibox2dgame.model.Assets;
 import ru.kizup.minibox2dgame.controller.GameController;
+import ru.kizup.minibox2dgame.model.Assets;
 
 import static ru.kizup.minibox2dgame.MiniGame.PIXELS_TO_METERS;
 

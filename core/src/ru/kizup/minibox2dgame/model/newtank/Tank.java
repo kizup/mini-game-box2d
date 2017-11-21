@@ -1,18 +1,6 @@
 package ru.kizup.minibox2dgame.model.newtank;
 
-import com.badlogic.gdx.ai.steer.SteeringBehavior;
-import com.badlogic.gdx.graphics.g2d.ParticleEffect;
 import com.badlogic.gdx.math.Vector2;
-import com.badlogic.gdx.physics.box2d.Body;
-import com.badlogic.gdx.physics.box2d.World;
-
-import java.util.ArrayList;
-import java.util.List;
-
-import ru.kizup.minibox2dgame.controller.TankStateListener;
-import ru.kizup.minibox2dgame.model.Bullet;
-import ru.kizup.minibox2dgame.model.Track;
-import ru.kizup.minibox2dgame.model.turret.TankTurret;
 
 import static ru.kizup.minibox2dgame.screen.GameScreen.BULLET_NONE;
 
@@ -75,7 +63,7 @@ public class Tank {
     private long cooldownTime = 1500;
     private int bullet;
 
-    public Tank(float width, float length, Vector2 position, float angle, float power, float maxSteerAngle, float maxSpeed, int koefRotation){
+    public Tank(float width, float length, Vector2 position, float angle, float power, float maxSteerAngle, float maxSpeed, int koefRotation, boolean isEnemy){
         this.width = width;
         this.length = length;
         this.position = position;
@@ -97,7 +85,7 @@ public class Tank {
         this.maxAngularSpeed = 30;
         this.maxLinearAcceleration = 5000;
         this.maxLinearSpeed = 500;
-        this.isEnemy = true;
+        this.isEnemy = isEnemy;
     }
 
     public int getAccelerate() {

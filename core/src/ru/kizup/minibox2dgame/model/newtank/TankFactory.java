@@ -8,11 +8,11 @@ import com.badlogic.gdx.math.Vector2;
 
 public class TankFactory {
 
-    public static Tank getTankEnemy(){
-        return new Tank(2, 4, new Vector2(50, 50), 0, 200, 5, 40, 5);
+    public static Tank getTankEnemy(Vector2 position){
+        return new Tank(2, 4, position, 0, 200, 5, 40, 5, true);
     }
 
     public static Tank getTankUser(){
-        return new Tank(2, 4, new Vector2(10, 10), 0, 60, 5, 40, 4);
+        return new Tank(2, 4, new Vector2(10, 10), 0, 60, 5, 40, 4, false);
     }
 }

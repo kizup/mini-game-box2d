@@ -27,9 +27,9 @@ import com.badlogic.gdx.utils.Align;
 import com.badlogic.gdx.utils.Array;
 
 import ru.kizup.minibox2dgame.MiniGame;
-import ru.kizup.minibox2dgame.model.Assets;
 import ru.kizup.minibox2dgame.controller.CollisionCategory;
 import ru.kizup.minibox2dgame.controller.TankStateListener;
+import ru.kizup.minibox2dgame.model.Assets;
 import ru.kizup.minibox2dgame.model.BoxProp;
 import ru.kizup.minibox2dgame.model.tank.EnemyTank;
 import ru.kizup.minibox2dgame.model.tank.PlayerTank;
