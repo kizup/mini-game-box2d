@@ -9,6 +9,7 @@ import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.World;
 
+import ru.kizup.minibox2dgame.model.newtank.player.TankPlayerPresenter;
 import ru.kizup.minibox2dgame.model.turret.EnemyTankTurret;
 import ru.kizup.minibox2dgame.util.SteeringUtils;
 import ru.kizup.minibox2dgame.util.Util;
@@ -23,7 +24,7 @@ public class EnemyTank extends Tank implements Steerable<Vector2>{
 
     public static final String TAG = "EnemyTank";
 
-    private Tank targetTank; // Таргет игрока
+    private TankPlayerPresenter targetTank; // Таргет игрока
 
     private float boundingRadius;
     private boolean tagged;
@@ -39,11 +40,11 @@ public class EnemyTank extends Tank implements Steerable<Vector2>{
 
     public String n;
 
-    public EnemyTank(String n, float width, float length, Vector2 position, float angle, float power, float maxSteerAngle, float maxSpeed, World world, Tank targetTank, float boundingRadius) {
+    public EnemyTank(String n, float width, float length, Vector2 position, float angle, float power, float maxSteerAngle, float maxSpeed, World world, TankPlayerPresenter targetTank, float boundingRadius) {
         super(width, length, position, angle, power, maxSteerAngle, maxSpeed, world, 4);
         this.n = n;
         this.targetTank = targetTank;
-        setTargetVector(targetTank.getBody().getPosition());
+        setTargetVector(targetTank.getPosition());
 
         cooldownTime = MathUtils.random(2500, 5500);
         bullet = BULLET_NONE;
@@ -79,7 +80,7 @@ public class EnemyTank extends Tank implements Steerable<Vector2>{
         super.update(delta);
         if (getHitPoints() <= 0) return;
 
-        if (targetTank != null) setTargetVector(targetTank.getBody().getPosition());
+        if (targetTank != null) setTargetVector(targetTank.getPosition());
 
         if(behavior != null){
             behavior.calculateSteering(steeringOutput);
@@ -94,7 +95,7 @@ public class EnemyTank extends Tank implements Steerable<Vector2>{
         }
 
         getBody().setTransform(getBody().getPosition(),
-                Util.normalizeAngle(getBody().getAngle()) + Util.getAngleRotationToTarget(targetTank.getBody().getPosition(), getBody(), 5f, 0.1f));
+                Util.normalizeAngle(getBody().getAngle()) + Util.getAngleRotationToTarget(targetTank.getPosition(), getBody(), 5f, 0.1f));
     }
 
     public void setTargetVector(Vector2 targetVector) {

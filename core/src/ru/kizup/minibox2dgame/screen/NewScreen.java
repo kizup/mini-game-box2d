@@ -65,7 +65,7 @@ public class NewScreen extends ScreenAdapter {
         table.row().left();
         table.add(fpsLabel).left().pad(0, PIXELS_TO_METERS, 0, 0);
         Gdx.input.setInputProcessor(new InputMultiplexer(stage));
-        ((InputMultiplexer) Gdx.input.getInputProcessor()).addProcessor(gameController.inputProcessor);
+//        ((InputMultiplexer) Gdx.input.getInputProcessor()).addProcessor(gameController.inputProcessor);
     }
 
     @Override
@@ -77,7 +77,7 @@ public class NewScreen extends ScreenAdapter {
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
 
         batch.begin();
-        gameController.targetAim.draw(batch);
+//        gameController.targetAim.draw(batch);
         Assets.sExplosionEffect.draw(batch);
         Assets.sSmallExplosionEffect.draw(batch);
         batch.end();

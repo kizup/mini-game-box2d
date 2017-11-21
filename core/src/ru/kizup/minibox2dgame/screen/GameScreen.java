@@ -37,6 +37,7 @@ import ru.kizup.minibox2dgame.model.tank.Tank;
 
 import static ru.kizup.minibox2dgame.MiniGame.PIXELS_TO_METERS;
 
+@Deprecated
 public class GameScreen extends ScreenAdapter {
 
     public static final int BULLET_NONE = 0;
@@ -145,19 +146,19 @@ public class GameScreen extends ScreenAdapter {
     private void initEnemyTank() {
         int x = MathUtils.random(5, (int) WIDTH_IN_METERS - 5);
         int y = MathUtils.random(5, (int) HEIGHT_IN_METERS - 5);
-        tankEnemy = new EnemyTank("56",2, 4, new Vector2(x, y), 0, 20, 5, 40, world, tank, 10);
-        tankEnemy.setTankStateListener(new TankStateListener() {
-            @Override
-            public void destroyBullet(Vector2 position) {
-
-            }
-
-            @Override
-            public void destroyTank(Tank tank) {
-                tankEnemy = null;
-                initEnemyTank();
-            }
-        });
+//        tankEnemy = new EnemyTank("56",2, 4, new Vector2(x, y), 0, 20, 5, 40, world, tank, 10);
+//        tankEnemy.setTankStateListener(new TankStateListener() {
+//            @Override
+//            public void destroyBullet(Vector2 position) {
+//
+//            }
+//
+//            @Override
+//            public void destroyTank(Tank tank) {
+//                tankEnemy = null;
+//                initEnemyTank();
+//            }
+//        });
     }
 
     @Override

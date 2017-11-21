@@ -22,6 +22,7 @@ import ru.kizup.minibox2dgame.model.turret.PlayerTankTurret;
 import ru.kizup.minibox2dgame.model.turret.TankTurret;
 
 import static ru.kizup.minibox2dgame.screen.GameScreen.BULLET_EXIST;
+import static ru.kizup.minibox2dgame.screen.GameScreen.BULLET_NONE;
 
 /**
  * Created by dpuzikov on 21.06.17.
@@ -88,6 +89,7 @@ public abstract class Tank implements Vehicle {
         if (koefRotation == 0 || koefRotation > power)
             throw new ArithmeticException("Коэффициент поворота танка должен быть в диапазоне [1;power]");
 
+        this.bullet = BULLET_NONE;
         this.width = width;
         this.length = length;
         this.position = position;
